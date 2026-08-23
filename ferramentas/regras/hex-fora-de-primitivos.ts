@@ -24,6 +24,14 @@ const EXTENSOES = ['.css', '.ts', '.tsx'];
 const HEX =
   /(?<![\w#])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
 
+/**
+ * `apps/playground` fica fora: ele é declaradamente fora do build de produção
+ * (D9), e a regra protege o artefato. A tela de marca existe justamente para
+ * alimentar `derivarPaleta` com cores arbitrárias — ali o hex é **entrada de
+ * demonstração**, não decisão de design.
+ */
+const FORA_DA_REGRA = 'apps/playground/';
+
 const AREAS = ['apps', 'packages', 'ferramentas'];
 
 export function verificar(raiz: string): Violacao[] {
@@ -33,7 +41,11 @@ export function verificar(raiz: string): Violacao[] {
     for (const arquivo of varrer(join(raiz, area), EXTENSOES)) {
       const caminho = comBarras(relative(raiz, arquivo));
 
-      if (ARQUIVOS_PERMITIDOS.has(caminho) || SUFIXO_DE_TESTE.test(caminho)) {
+      if (
+        ARQUIVOS_PERMITIDOS.has(caminho) ||
+        SUFIXO_DE_TESTE.test(caminho) ||
+        caminho.startsWith(FORA_DA_REGRA)
+      ) {
         continue;
       }
 

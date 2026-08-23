@@ -8,6 +8,7 @@
     "allowJs": true,
     "incremental": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "plugins": [{ "name": "next" }]
   },
   "include": ["app", "src", "next-env.d.ts", "next.config.ts", ".next/types/**/*.ts"],

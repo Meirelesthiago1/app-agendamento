@@ -1,0 +1,20 @@
+@import "@agendamento/ui/tokens/tailwind.css";
+@import "@agendamento/ui/tokens/fonte.css";
+
+/* O Tailwind v4 precisa saber onde procurar classe fora deste app */
+@source "../../../packages/ui/src";
+
+/*
+ * Como os sete estados de 4.3 ficam visíveis sem interação.
+ *
+ * Redefinir as variantes faz cada utilitária `hover:`, `focus-visible:` e
+ * `active:` valer também sob um ancestral marcado. É o que permite exibir os
+ * estados **com o estilo real do componente**, em vez de recriá-los na
+ * demonstração — uma cópia divergiria do original no primeiro ajuste.
+ *
+ * Vive aqui, no playground, e não em `packages/ui`: é ferramenta de inspeção,
+ * e não deve existir no artefato de produção.
+ */
+@custom-variant hover (&:hover, [data-forcar~="hover"] &);
+@custom-variant focus-visible (&:focus-visible, [data-forcar~="foco"] &);
+@custom-variant active (&:active, [data-forcar~="ativo"] &);

@@ -28,7 +28,7 @@ const CROMA_DO_SUAVE = 0.22;
 
 const PASSO_DA_BUSCA = 0.005;
 
-export const COR_PADRAO = MARCA['navy-500'];
+export const COR_PADRAO: string = MARCA['navy-500'];
 
 function melhorConteudo(fundo: string): string {
   return contraste(fundo, NEUTROS.branco) >= contraste(fundo, NEUTROS['cinza-900'])

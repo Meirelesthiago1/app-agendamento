@@ -5,7 +5,7 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: etapas 0 a 3 concluídas. A etapa 4 (sistema de design: fundação) é o
+**Estado: etapas 0 a 4 concluídas. A etapa 5 (autenticação e sessão) é o
 próximo passo.** O detalhe está em "Onde a
 implementação está", no fim deste arquivo.
 
@@ -126,7 +126,8 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | 0 — Fundação | `main` | Monorepo, Docker Compose, CI, as três regras executáveis |
 | 1 — Banco | `main` | 19 tabelas, RLS, dois papéis, `EXCLUDE`, semente, os dois testes de 10.1 |
 | 2 — Domínio | `main` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
-| 3 — API | `etapa-3-api` | `contratos` com `ROTAS` e cliente próprio, Fastify com os quatro plugins, `unidadeDeTrabalho`, as cinco portas locais, e quatro rotas reais |
+| 3 — API | `main` | `contratos` com `ROTAS` e cliente próprio, Fastify com os quatro plugins, `unidadeDeTrabalho`, as cinco portas locais, e quatro rotas reais |
+| 4 — Design | `etapa-4-design` | Tokens em três camadas, `derivarPaleta` em OKLCH, os 18 componentes do lote de fundação, e o playground com `/tokens`, `/primitivos` e `/marca` |
 
 Levantar o ambiente do zero:
 
@@ -203,6 +204,20 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
 - O plugin de contexto entrega o estabelecimento **inteiro**, não só o id. Há
   teste contando as resoluções por requisição, porque a busca duplicada não
   aparece em teste de comportamento.
+- **A fonte dos valores de cor é `packages/ui/src/tokens/primitivos.ts`**;
+  `primitivos.css` é gerado por `pnpm --filter @agendamento/ui tokens`, com teste
+  reprovando divergência. Arquivo gerado fica fora do Biome.
+- D14 não vale para `*.teste.ts` nem para `apps/playground`: a regra protege o
+  artefato de produção, e nenhum dos dois entra nele.
+- Os sete estados de 4.3 aparecem no playground sem interação porque
+  `estilos.css` **redefine** as variantes `hover:`, `focus-visible:` e `active:`
+  para valerem sob `[data-forcar]`. Exibe o estilo real do componente; recriar os
+  estados na demonstração produziria uma cópia que diverge no primeiro ajuste.
+- `ui/icones` nomeia pelo **desenho**, nunca pelo significado no produto:
+  `IconePessoa`, não `IconeCliente` (D8).
+- A Inter mora em `packages/ui/src/tokens/fontes/`, com as faces declaradas à
+  mão para `latin` e `latin-ext`. O `url()` com especificador de pacote não
+  resolve no build do Vite.
 
 ## Decisões ainda abertas
 
@@ -212,7 +227,7 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
 |---|---|
 | `slug` sem regra de validação nem lista de reservados — `app`, `auth`, `api` e `envio` são endereços do sistema | Etapa 7/8 |
 | `segmento` sem lista fechada, embora a janela de agendamento seja sugerida por segmento (6.6) | Etapa 8 |
-| Rate limit de `slots` e `dias_com_vaga` sem número definido | Etapa 11 |
+| Rate limit de `slots` e `dias_com_vaga` — provisório em 60/min e 30/min | Etapa 11 |
 | `token_gestao_expira_em` definido como "alguns dias" — não implementável | Etapa 11 |
 | Como testar `{slug}.dominio.com` localmente (hosts do Windows não aceita curinga) | Etapa 11 |
 | Criar estabelecimento antes de existir contexto de tenant — a RLS de `estabelecimentos` cobre leitura e alteração, não criação | Etapa 8 |

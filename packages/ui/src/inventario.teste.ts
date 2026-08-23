@@ -26,7 +26,7 @@ const LOTE_DE_FUNDACAO = [
   'BarraDeAcoes',
 ] as const;
 
-const MARCA = ['derivarPaleta', 'ProvedorMarca'] as const;
+const MARCA = ['derivarPaleta', 'ProvedorMarca', 'SeletorCorMarca'] as const;
 
 describe('inventário do lote de fundação', () => {
   test('os dezoito componentes são exportados', () => {
