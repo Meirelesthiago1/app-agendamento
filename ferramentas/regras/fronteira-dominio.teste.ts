@@ -44,6 +44,24 @@ describe('fronteira de packages/dominio', () => {
     expect(verificar(fixtura.raiz)).toHaveLength(1);
   });
 
+  const IMPORTA_VITEST = ["import { test } from 'vitest';", ''].join('\n');
+
+  test('arquivo de teste pode importar vitest: nao vai para o dist', () => {
+    fixtura.escrever('packages/dominio/src/tempo/tempo.teste.ts', IMPORTA_VITEST);
+
+    expect(verificar(fixtura.raiz)).toEqual([]);
+  });
+
+  test('mas o codigo publicado ao lado dele nao pode', () => {
+    fixtura.escrever('packages/dominio/src/tempo/tempo.teste.ts', IMPORTA_VITEST);
+    fixtura.escrever('packages/dominio/src/tempo/index.ts', IMPORTA_VITEST);
+
+    const violacoes = verificar(fixtura.raiz);
+
+    expect(violacoes).toHaveLength(1);
+    expect(violacoes[0]?.arquivo).toBe('packages/dominio/src/tempo/index.ts');
+  });
+
   test('ignora ocorrencia em comentario e em literal de texto', () => {
     fixtura.escrever(
       'packages/dominio/src/nota.ts',
