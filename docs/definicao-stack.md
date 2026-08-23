@@ -1,9 +1,11 @@
 # Sistema de Agendamento Multi-Tenant — Definição de Stack e Arquitetura
 
-**Versão 1.1**
+**Versão 1.2**
 
 Documento técnico. Define linguagem, bibliotecas, arquitetura de camadas, fronteiras de import e convenções de código.
 
+> **Alteração da v1.1 para a v1.2:** o **ts-rest sai** da seção 2.1, substituído por um mapa de rotas em Zod com cliente próprio; acrescentada a decisão T31, que registra o porquê. Nenhuma outra escolha de biblioteca e nenhuma fronteira de camada foi alterada — o propósito do ts-rest, contrato único entre servidor e telas, continua valendo e é o que a substituição entrega.
+>
 > **Alteração da v1.0 para a v1.1:** acrescentada a seção 6.10 (formato de erro, encerrando a pendência D-b do sistema de design) e a decisão T30; corrigido o piso de versão do PostgreSQL em 2.5; encerradas as pendências T-a a T-e. Nenhuma escolha de biblioteca ou fronteira de camada foi alterada.
 
 **Entrada obrigatória:** `planejamento-agendamento.md` (v1.3). Este documento não redefine regra de negócio, modelo de dados ou fluxo — apenas escolhe com o que construí-los. Toda referência no formato `(8.5)` ou `(decisão 31)` aponta para lá.
@@ -76,7 +78,7 @@ Desenvolvedor único, com experiência prévia em Node e TypeScript em produçã
 | Acesso a dados | Drizzle ORM + drizzle-kit |
 | Backend | Fastify + `fastify-type-provider-zod` |
 | Fila e agendamento | pg-boss |
-| Contratos | Zod + ts-rest |
+| Contratos | Zod, com mapa de rotas e cliente próprios (T31) |
 | Datas e fuso | Luxon |
 
 ### 2.2 Frontends
@@ -156,7 +158,7 @@ agendamento/
 │  └─ publico/        Next.js
 ├─ packages/
 │  ├─ dominio/        regras puras, zero I/O
-│  ├─ contratos/      schemas Zod e contrato ts-rest
+│  ├─ contratos/      schemas Zod, mapa de rotas e cliente
 │  ├─ db/             schema Drizzle, migrações, policies RLS
 │  └─ ui/             tokens de design e componentes base
 ├─ docker-compose.yml
@@ -415,7 +417,7 @@ apps/painel/src/
 │  ├─ agenda/
 │  │   ├─ componentes/       GradeSemanal, ListaDoDia, CartaoAgendamento
 │  │   ├─ hooks/             useAgendaDoDia, useTransicionar
-│  │   └─ api.ts             cliente ts-rest tipado
+│  │   └─ api.ts             cliente tipado de `contratos`
 │  ├─ onboarding/  servicos/  horarios/
 │  ├─ clientes/    caixa/     equipe/    resumo/
 ├─ componentes/              compartilhados entre funcionalidades
@@ -593,6 +595,7 @@ Numeração `T`, independente da numeração do funcional. Numeração contínua
 | T28 | Numeração `T` independente | Numeração contínua entre documentos faria inserção futura no funcional deslocar o significado das decisões técnicas |
 | T29 | Documento separado do funcional | Ritmos de mudança opostos, e a linha 5 do funcional o define como entrada para esta decisão. Fundir tornaria o documento autorreferente e faria bump de versão de biblioteca poluir o histórico das decisões de produto |
 | T30 | Contrato de erro com `codigo`, `mensagem` e `campos`, na notação de caminho do react-hook-form | Sem erros por campo no contrato, cada formulário reimplementa o mapeamento. A notação idêntica à do RHF é o que dispensa o conversor, e a conversão do `ZodError` no plugin dá erro por campo a toda rota validada por schema, de graça |
+| T31 | Mapa de rotas em Zod com cliente próprio, no lugar do ts-rest | O ts-rest é incompatível com a stack desta versão, e falha do pior jeito: `@ts-rest/fastify` exige Fastify 4, e `@ts-rest/core` exige Zod 3 — com Zod 4 ele **não acusa erro, infere `any`**. Um contrato que aparenta tipar e não tipa é pior que contrato nenhum, porque remove a desconfiança. Voltar para Fastify 4 (fora de suporte) e Zod 3 para preservar uma biblioteca não se paga. O substituto é `ROTAS`, um mapa que servidor e cliente leem, com inferência derivada dele — e um teste de tipo que reprova se a inferência voltar a degradar para `any` |
 
 ---
 

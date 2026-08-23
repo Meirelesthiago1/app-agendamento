@@ -1,13 +1,15 @@
 # Sistema de Agendamento Multi-Tenant — Plano de Implementação
 
-**Versão 1.1**
+**Versão 1.2**
 
 Roteiro de execução. Define a ordem das etapas, o que cada uma entrega e o critério que a declara pronta.
 
-**Entradas obrigatórias:** `planejamento-agendamento.md` (v1.4), `definicao-stack.md` (v1.1), `sistema-de-design.md` (v1.1), `conteudo-e-microcopia.md` (v1.0) e `operacao.md` (v1.0). Este documento não decide o que o sistema faz, nem com o que é construído, nem como se parece, nem o que escreve, nem onde roda. Decide apenas **em que ordem**, e por quê.
+**Entradas obrigatórias:** `planejamento-agendamento.md` (v1.4), `definicao-stack.md` (v1.2), `sistema-de-design.md` (v1.1), `conteudo-e-microcopia.md` (v1.0) e `operacao.md` (v1.0). Este documento não decide o que o sistema faz, nem com o que é construído, nem como se parece, nem o que escreve, nem onde roda. Decide apenas **em que ordem**, e por quê.
 
 Referências: `(5.1)` aponta para o funcional, `(T14)` para o stack, `(D6)` para o design, `(C7)` para o conteúdo, `(O13)` para a operação.
 
+> **Alteração da v1.1 para a v1.2:** as três menções a `ts-rest` acompanham a v1.2 do `definicao-stack.md`, que o substituiu por um mapa de rotas em Zod com cliente próprio (T31). Nenhuma etapa mudou de ordem, de entrega ou de critério de pronto.
+>
 > **Alteração da v1.0 para a v1.1:** a seção 8 deixou de listar pendências bloqueantes — todas foram resolvidas. Acrescentadas as referências aos dois documentos novos. A ordem das etapas não mudou.
 
 **Substitui** a seção 12 do `definicao-stack.md`, que fica como o resumo de sete linhas que era. Este documento é a versão executável dela, com o sistema de design incorporado.
@@ -41,7 +43,7 @@ Cinco regras produziram a ordem da seção 3. Quando uma etapa parecer fora de l
 
 **4. Autenticação antes das telas que dependem dela.** O painel precisa de usuário, papel e vínculo reais para sair do mock. Deixar auth para o fim significa construir tudo contra dados falsos e descobrir os problemas de uma vez só.
 
-**5. Uma funcionalidade completa cedo, para validar as abstrações.** A etapa 7 é a primeira que atravessa contrato, caso de uso, repositório, hooks e formulário. Só depois dela se sabe se `Campo`, o cliente ts-rest e as key factories estão certos. Construir três funcionalidades antes disso multiplica o retrabalho por três.
+**5. Uma funcionalidade completa cedo, para validar as abstrações.** A etapa 7 é a primeira que atravessa contrato, caso de uso, repositório, hooks e formulário. Só depois dela se sabe se `Campo`, o cliente de `contratos` e as key factories estão certos. Construir três funcionalidades antes disso multiplica o retrabalho por três.
 
 ---
 
@@ -69,7 +71,7 @@ Ambas as aplicações nascem **network-first**, com service worker registrado e 
 | 0 | Fundação do repositório | Monorepo, Docker Compose, CI, regras executáveis | ● |
 | 1 | Banco, isolamento e concorrência | Esquema, RLS, dois papéis, `EXCLUDE` | ● |
 | 2 | `packages/dominio` | Motor de slots, transições, permissões, tempo, dinheiro | ● |
-| 3 | Contratos e casca da API | Zod + ts-rest, Fastify, plugins, `Contexto`, transação | ● |
+| 3 | Contratos e casca da API | Zod, Fastify, plugins, `Contexto`, transação | ● |
 | 4 | **Sistema de design: fundação** | Tokens, playground, marca, primeiro lote de primitivos | |
 | 5 | Autenticação e sessão | Usuários, vínculos, sessões, convite, e-mail | |
 | 6 | Casca do painel | Rotas, layout, guarda, permissão, cache por estabelecimento | |
@@ -133,7 +135,7 @@ Ambas as aplicações nascem **network-first**, com service worker registrado e 
 
 ### Etapa 3 — Contratos e casca da API
 
-**Entrega.** `packages/contratos` com os schemas Zod e o contrato ts-rest. `apps/api` com Fastify, `fastify-type-provider-zod`, os quatro plugins de 6.1 do stack, `unidadeDeTrabalho`, `pino`, e as implementações locais das cinco portas.
+**Entrega.** `packages/contratos` com os schemas Zod, o mapa de rotas e o cliente tipado (T31). `apps/api` com Fastify, `fastify-type-provider-zod`, os quatro plugins de 6.1 do stack, `unidadeDeTrabalho`, `pino`, e as implementações locais das cinco portas.
 
 **Fecha a pendência D-b.** O formato de erro precisa carregar erros por campo antes do primeiro formulário, ou o mapeamento é reescrito em cada tela. É uma decisão de contrato, e este é o momento dela.
 
