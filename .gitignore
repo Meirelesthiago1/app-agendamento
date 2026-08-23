@@ -4,7 +4,6 @@ dist/
 .turbo/
 coverage/
 .dados/
-rotaArvore.gen.ts
 *.tsbuildinfo
 *.log
 
