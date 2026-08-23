@@ -1,0 +1,28 @@
+{
+  "name": "agendamento",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "servicos": "docker compose up -d",
+    "servicos:parar": "docker compose down",
+    "dev": "docker compose up -d && turbo run dev",
+    "build": "turbo run build",
+    "tipos": "turbo run tipos && tsc -p tsconfig.json",
+    "lint": "biome check .",
+    "lint:corrigir": "biome check --write .",
+    "regras": "node ferramentas/regras/executar.ts",
+    "teste": "vitest run",
+    "verificar": "pnpm lint && pnpm tipos && pnpm regras && pnpm teste && pnpm build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.0",
+    "@types/node": "^24.7.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
