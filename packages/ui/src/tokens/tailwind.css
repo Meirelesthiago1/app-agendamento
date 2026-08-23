@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@import "./primitivos.css";
+@import "./semanticos.css";
+@import "./densidade.css";
+
+/*
+ * `inline` mantém a **referência** à variável em vez de copiar o valor. Sem ele,
+ * `bg-superficie` congela a cor do momento da compilação, e a página pública sai
+ * toda navy quando a marca do tenant é aplicada em tempo de execução (2.7).
+ */
+@theme inline {
+  --color-superficie: var(--superficie);
+  --color-superficie-afundada: var(--superficie-afundada);
+  --color-superficie-elevada: var(--superficie-elevada);
+
+  --color-borda: var(--borda);
+  --color-borda-forte: var(--borda-forte);
+
+  --color-conteudo: var(--conteudo);
+  --color-conteudo-suave: var(--conteudo-suave);
+  --color-conteudo-tenue: var(--conteudo-tenue);
+
+  --color-acao: var(--acao);
+  --color-acao-forte: var(--acao-forte);
+  --color-acao-suave: var(--acao-suave);
+  --color-acao-conteudo: var(--acao-conteudo);
+
+  --color-positivo: var(--positivo);
+  --color-positivo-suave: var(--positivo-suave);
+  --color-positivo-conteudo: var(--positivo-conteudo);
+
+  --color-atencao: var(--atencao);
+  --color-atencao-suave: var(--atencao-suave);
+  --color-atencao-conteudo: var(--atencao-conteudo);
+
+  --color-negativo: var(--negativo);
+  --color-negativo-suave: var(--negativo-suave);
+  --color-negativo-conteudo: var(--negativo-conteudo);
+
+  --color-neutro: var(--neutro);
+  --color-neutro-suave: var(--neutro-suave);
+  --color-neutro-conteudo: var(--neutro-conteudo);
+
+  --radius-sm: var(--raio-sm);
+  --radius-md: var(--raio-md);
+  --radius-lg: var(--raio-lg);
+  --radius-xl: var(--raio-xl);
+  --radius-completo: var(--raio-completo);
+
+  --shadow-1: var(--sombra-1);
+  --shadow-2: var(--sombra-2);
+
+  --font-sans: var(--fonte-corpo);
+
+  --text-2xs: var(--texto-2xs);
+  --text-2xs--line-height: var(--entrelinha-2xs);
+  --text-xs: var(--texto-xs);
+  --text-xs--line-height: var(--entrelinha-xs);
+  --text-sm: var(--texto-sm);
+  --text-sm--line-height: var(--entrelinha-sm);
+  --text-base: var(--texto-base);
+  --text-base--line-height: var(--entrelinha-base);
+  --text-lg: var(--texto-lg);
+  --text-lg--line-height: var(--entrelinha-lg);
+  --text-xl: var(--texto-xl);
+  --text-xl--line-height: var(--entrelinha-xl);
+  --text-2xl: var(--texto-2xl);
+  --text-2xl--line-height: var(--entrelinha-2xl);
+  --text-3xl: var(--texto-3xl);
+  --text-3xl--line-height: var(--entrelinha-3xl);
+}
+
+@layer base {
+  body {
+    background-color: var(--superficie-afundada);
+    color: var(--conteudo);
+    font-family: var(--fonte-corpo);
+    font-size: var(--texto-corpo);
+    line-height: var(--entrelinha-corpo);
+  }
+
+  /* Valor monetário e horário alinham verticalmente; sem isso as colunas dançam (2.4) */
+  .numerais-tabulares {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Campo com fonte menor que 16px faz o Safari no iOS dar zoom ao receber foco,
+   * deslocando a tela no meio do fluxo de agendamento (2.4).
+   */
+  [data-densidade="confortavel"] :is(input, select, textarea) {
+    font-size: max(1rem, var(--texto-corpo));
+  }
+}

@@ -14,7 +14,8 @@
       "!**/.turbo",
       "!**/pnpm-lock.yaml",
       "!**/next-env.d.ts",
-      "!**/migracoes/meta"
+      "!**/migracoes/meta",
+      "!**/tokens/primitivos.css"
     ]
   },
   "formatter": {
@@ -42,6 +43,11 @@
       "source": {
         "organizeImports": "on"
       }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

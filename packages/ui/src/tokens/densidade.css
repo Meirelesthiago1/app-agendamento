@@ -1,0 +1,33 @@
+/*
+ * Densidade por atributo no elemento raiz (2.6), redefinindo tokens de
+ * componente. Não como componentes separados, que duplicariam o inventário, nem
+ * como prop `tamanho` em cada chamada, que espalharia a decisão por centenas de
+ * pontos do código.
+ */
+
+:root,
+[data-densidade="confortavel"] {
+  --altura-controle: 48px;
+  --padding-cartao: 20px;
+  --largura-conteudo: 480px;
+  --texto-corpo: var(--texto-base);
+  --entrelinha-corpo: var(--entrelinha-base);
+}
+
+[data-densidade="compacta"] {
+  --altura-controle: 36px;
+  --padding-cartao: 16px;
+  --largura-conteudo: 1280px;
+  --texto-corpo: var(--texto-sm);
+  --entrelinha-corpo: var(--entrelinha-sm);
+}
+
+/*
+ * O painel é usado no celular do gestor, às sete da manhã, para bloquear o dia
+ * em dois toques (5.9). Alvo de 36px ali é o que faz esse fluxo falhar.
+ */
+@media (pointer: coarse) {
+  [data-densidade="compacta"] {
+    --altura-controle: 44px;
+  }
+}

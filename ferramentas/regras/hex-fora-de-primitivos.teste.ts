@@ -17,8 +17,15 @@ describe('hex fora de primitivos.css', () => {
     fixtura.descartar();
   });
 
-  test('aceita hex dentro de primitivos.css', () => {
+  test('aceita hex na fonte em TypeScript e no CSS gerado dela', () => {
+    fixtura.escrever('packages/ui/src/tokens/primitivos.ts', `export const roxo = '${HEX}';\n`);
     fixtura.escrever('packages/ui/src/tokens/primitivos.css', `:root { --violeta-500: ${HEX}; }\n`);
+
+    expect(verificar(fixtura.raiz)).toEqual([]);
+  });
+
+  test('aceita hex em arquivo de teste: nao vai para o artefato', () => {
+    fixtura.escrever('packages/ui/src/marca/cor.teste.ts', `const alvo = '${HEX}';\n`);
 
     expect(verificar(fixtura.raiz)).toEqual([]);
   });

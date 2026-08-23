@@ -6,7 +6,18 @@ import type { Violacao } from './lib/tipos.ts';
 
 export const NOME = 'nenhum hex fora de primitivos.css (D14)';
 
-const ARQUIVO_PERMITIDO = 'packages/ui/src/tokens/primitivos.css';
+/**
+ * A fonte dos valores crus é `primitivos.ts`; o `.css` é gerado a partir dele, e
+ * há teste que reprova a divergência entre os dois. Arquivo de teste fica de
+ * fora pela mesma razão da regra de fronteira: não vai para o artefato, e um
+ * teste de cor precisa de literais para ter o que verificar.
+ */
+const ARQUIVOS_PERMITIDOS = new Set([
+  'packages/ui/src/tokens/primitivos.ts',
+  'packages/ui/src/tokens/primitivos.css',
+]);
+
+const SUFIXO_DE_TESTE = /\.teste\.tsx?$/;
 
 const EXTENSOES = ['.css', '.ts', '.tsx'];
 
@@ -22,7 +33,7 @@ export function verificar(raiz: string): Violacao[] {
     for (const arquivo of varrer(join(raiz, area), EXTENSOES)) {
       const caminho = comBarras(relative(raiz, arquivo));
 
-      if (caminho === ARQUIVO_PERMITIDO) {
+      if (ARQUIVOS_PERMITIDOS.has(caminho) || SUFIXO_DE_TESTE.test(caminho)) {
         continue;
       }
 
@@ -33,7 +44,7 @@ export function verificar(raiz: string): Violacao[] {
         violacoes.push({
           arquivo: caminho,
           linha: codigo.slice(0, encontro.index).split('\n').length,
-          mensagem: `hex literal '${encontro[0]}'; o único lugar é ${ARQUIVO_PERMITIDO}`,
+          mensagem: `hex literal '${encontro[0]}'; a fonte é ${[...ARQUIVOS_PERMITIDOS][0]}`,
         });
       }
     }

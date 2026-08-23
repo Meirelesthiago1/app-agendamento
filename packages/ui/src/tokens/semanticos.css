@@ -1,0 +1,76 @@
+/*
+ * Camada semântica (2.2). Todo componente lê daqui, e só daqui.
+ * `[data-tema]` separa as duas identidades; o tema escuro entra redefinindo
+ * este arquivo, sem tocar em componente nenhum (D15).
+ */
+
+:root {
+  --superficie: var(--branco);
+  --superficie-afundada: var(--cinza-50);
+  --superficie-elevada: var(--branco);
+
+  --borda: var(--cinza-200);
+  --borda-forte: var(--cinza-300);
+
+  --conteudo: var(--cinza-900);
+  --conteudo-suave: var(--cinza-500);
+  --conteudo-tenue: var(--cinza-400);
+
+  --acao: var(--navy-500);
+  --acao-forte: var(--navy-600);
+  --acao-suave: var(--navy-100);
+  --acao-conteudo: var(--branco);
+
+  --positivo: var(--verde-700);
+  --positivo-suave: var(--verde-50);
+  --positivo-conteudo: var(--verde-800);
+
+  --atencao: var(--ambar-700);
+  --atencao-suave: var(--ambar-50);
+  --atencao-conteudo: var(--ambar-800);
+
+  --negativo: var(--vermelho-700);
+  --negativo-suave: var(--vermelho-50);
+  --negativo-conteudo: var(--vermelho-800);
+
+  --neutro: var(--cinza-600);
+  --neutro-suave: var(--cinza-100);
+  --neutro-conteudo: var(--cinza-700);
+
+  --raio-sm: 6px;
+  --raio-md: 10px;
+  --raio-lg: 14px;
+  --raio-xl: 20px;
+  --raio-completo: 9999px;
+
+  --texto-2xs: 0.6875rem;
+  --entrelinha-2xs: 1rem;
+  --texto-xs: 0.75rem;
+  --entrelinha-xs: 1.125rem;
+  --texto-sm: 0.875rem;
+  --entrelinha-sm: 1.25rem;
+  --texto-base: 1rem;
+  --entrelinha-base: 1.5rem;
+  --texto-lg: 1.125rem;
+  --entrelinha-lg: 1.625rem;
+  --texto-xl: 1.25rem;
+  --entrelinha-xl: 1.75rem;
+  --texto-2xl: 1.5rem;
+  --entrelinha-2xl: 2rem;
+  --texto-3xl: 1.875rem;
+  --entrelinha-3xl: 2.375rem;
+
+  --fonte-corpo: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --anel-foco: 2px;
+  --anel-foco-offset: 2px;
+}
+
+/*
+ * A cor do tenant não é aplicada no painel: identidade fixa do produto. O gestor
+ * que atende em dois estabelecimentos não deve ver a interface mudar de cor ao
+ * trocar de contexto (2.3).
+ */
+[data-tema="publico"] {
+  --superficie-afundada: var(--cinza-50);
+}

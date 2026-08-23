@@ -234,6 +234,9 @@ importers:
 
   packages/ui:
     devDependencies:
+      '@types/node':
+        specifier: ^24.7.0
+        version: 24.13.3
       '@types/react':
         specifier: ^19.2.0
         version: 19.2.18
@@ -249,6 +252,9 @@ importers:
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/node@24.13.3)(tsx@4.23.12)(yaml@2.9.0)
 
 packages:
 
