@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1787495875065,
+      "tag": "0000_crazy_prima",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787495876181,
+      "tag": "0001_exclusao_e_grants",
+      "breakpoints": true
+    }
+  ]
+}

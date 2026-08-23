@@ -4,3 +4,8 @@ packages:
 
 allowBuilds:
   esbuild: true
+  # Dependências transitivas do testcontainers. Nenhuma precisa do binário nativo
+  # para falar com o Docker local, e negá-las evita compilação nativa no CI.
+  cpu-features: false
+  protobufjs: false
+  ssh2: false

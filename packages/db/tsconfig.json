@@ -3,11 +3,11 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "src",
-    "outDir": "dist",
+    "types": ["node"],
+    "noEmit": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["src"]
+  "include": ["src", "testes", "drizzle.config.ts"]
 }

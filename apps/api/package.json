@@ -8,10 +8,15 @@
     "tipos": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "zod": "^4.1.0"
+    "zod": "^4.1.0",
+    "@agendamento/db": "workspace:*",
+    "@agendamento/dominio": "workspace:*",
+    "drizzle-orm": "^0.44.0",
+    "pg": "^8.16.0"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "@types/pg": "^8.15.0"
   }
 }

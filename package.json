@@ -16,7 +16,7 @@
     "lint:corrigir": "biome check --write .",
     "regras": "node ferramentas/regras/executar.ts",
     "teste": "vitest run",
-    "verificar": "pnpm lint && pnpm tipos && pnpm regras && pnpm teste && pnpm build"
+    "verificar": "pnpm lint && pnpm tipos && pnpm regras && pnpm build && pnpm teste"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",

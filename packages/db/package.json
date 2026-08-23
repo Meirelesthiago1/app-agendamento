@@ -9,22 +9,34 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./semente": {
+      "types": "./dist/semente.d.ts",
+      "default": "./dist/semente.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
-    "tipos": "tsc -p tsconfig.json --noEmit"
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "tipos": "tsc -p tsconfig.json",
+    "migracao:gerar": "drizzle-kit generate",
+    "migracao:aplicar": "drizzle-kit migrate",
+    "semear": "node --env-file-if-exists=../../.env dist/semente.js"
   },
   "dependencies": {
     "@agendamento/dominio": "workspace:*",
-    "drizzle-orm": "^0.44.0"
+    "drizzle-orm": "^0.44.0",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^12.1.0",
+    "@types/node": "^24.7.0",
+    "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.0",
+    "testcontainers": "^12.1.0",
     "typescript": "^5.9.0"
   }
 }

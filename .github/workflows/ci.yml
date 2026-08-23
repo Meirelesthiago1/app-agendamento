@@ -34,8 +34,10 @@ jobs:
       - name: Regras de arquitetura
         run: pnpm regras
 
-      - name: Testes
-        run: pnpm teste
-
+      # Build antes dos testes: os testes de integração importam os pacotes pelo
+      # `exports` do package.json, que aponta para dist.
       - name: Build
         run: pnpm build
+
+      - name: Testes
+        run: pnpm teste
