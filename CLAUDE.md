@@ -162,6 +162,15 @@ pnpm verificar                                       # lint, tipos, regras, buil
   frente transborda igual.
 - A regra de fronteira de `dominio` ignora `*.teste.ts`: ela garante que o pacote
   rode no browser, e teste não entra no `dist/`.
+- **ts-rest saiu.** `@ts-rest/fastify` exige Fastify 4 e `@ts-rest/core` exige
+  Zod 3; com Zod 4 o ts-rest infere `any` **em silêncio**, sem erro de
+  compilação. `packages/contratos` passa a ter `ROTAS` (mapa Zod tipado) e um
+  cliente próprio de ~180 linhas. `definicao-stack.md` §2.1 ainda diz ts-rest e
+  precisa de uma v1.2. Há teste de tipo que reprova se a inferência degradar
+  para `any` de novo.
+- `SLUGS_RESERVADOS` foi fechada em `packages/contratos/src/comuns.ts`, junto do
+  formato do slug. Fecha cedo a lacuna que venceria na etapa 7/8; a lista é
+  editável.
 
 ## Decisões ainda abertas
 

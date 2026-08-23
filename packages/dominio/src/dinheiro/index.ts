@@ -1,7 +1,10 @@
 /** Valores em centavos, inteiros. Moeda fixa em BRL, mercado nacional (8.1). */
 export type Centavos = number;
 
-export type ExibicaoValor = 'FIXO' | 'A_PARTIR_DE' | 'OCULTO' | 'GRATUITO';
+/** Lista fechada, para que `contratos` derive o enum Zod da mesma fonte. */
+export const EXIBICOES_VALOR = ['FIXO', 'A_PARTIR_DE', 'OCULTO', 'GRATUITO'] as const;
+
+export type ExibicaoValor = (typeof EXIBICOES_VALOR)[number];
 
 export type ItemDeValor = {
   exibicao: ExibicaoValor;
