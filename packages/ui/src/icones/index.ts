@@ -5,6 +5,10 @@
  *
  * A referência de desenho usa Iconsax; o conjunto adotado em código é o Lucide,
  * de traço equivalente, com tree-shaking real e manutenção ativa.
+ *
+ * O nome descreve o **desenho**, nunca o significado no produto: `IconePessoa`,
+ * não `IconeCliente`. Quem sabe que aquela pessoa é um cliente é a aplicação —
+ * `packages/ui` não conhece domínio (D8).
  */
 
 export type { LucideIcon as Icone } from 'lucide-react';
@@ -13,9 +17,9 @@ export {
   AlertTriangle as IconeAtencao,
   ArrowLeft as IconeVoltar,
   ArrowRight as IconeAvancar,
-  Ban as IconeBloqueio,
+  Ban as IconeProibido,
   Calendar as IconeCalendario,
-  CalendarX as IconeAgendaVazia,
+  CalendarX as IconeCalendarioVazio,
   Check as IconeConfirmar,
   CheckCircle2 as IconeSucesso,
   ChevronDown as IconeAbrir,
@@ -24,7 +28,7 @@ export {
   ChevronUp as IconeFechar,
   Clock as IconeHorario,
   Copy as IconeCopiar,
-  CreditCard as IconeCaixa,
+  CreditCard as IconeCartao,
   Ellipsis as IconeMais,
   Eye as IconeVer,
   EyeOff as IconeOcultar,
@@ -37,10 +41,10 @@ export {
   Plus as IconeAumentar,
   Search as IconeBuscar,
   Settings as IconeConfiguracoes,
-  Store as IconeEstabelecimento,
+  Store as IconeLoja,
   Trash2 as IconeRemover,
-  User as IconeCliente,
-  Users as IconeEquipe,
-  UserX as IconeFalta,
+  User as IconePessoa,
+  Users as IconePessoas,
+  UserX as IconePessoaAusente,
   X as IconeCancelar,
 } from 'lucide-react';
