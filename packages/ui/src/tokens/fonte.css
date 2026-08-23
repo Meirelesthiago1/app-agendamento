@@ -1,0 +1,24 @@
+/*
+ * Inter variável, auto-hospedada (2.4). Sem dependência de rede externa, o que
+ * importa no público, onde o peso é crítico.
+ *
+ * Os arquivos vêm de `@fontsource-variable/inter`; os subconjuntos `latin` e
+ * `latin-ext` cobrem o português sem carregar cirílico e grego.
+ */
+@import "@fontsource-variable/inter/latin.css";
+@import "@fontsource-variable/inter/latin-ext.css";
+
+/*
+ * Face de fallback com métricas calculadas contra a Inter (D-g). Os valores são
+ * gerados por `fallback-tipografico.ts` e travados por teste — sem ela, a troca
+ * da fonte de sistema pela Inter desloca o texto na primeira pintura, em toda
+ * visita nova da página pública.
+ */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 107.12%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0.00%;
+}
