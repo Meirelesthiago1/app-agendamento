@@ -43,22 +43,22 @@
   --raio-xl: 20px;
   --raio-completo: 9999px;
 
-  --texto-2xs: 0.6875rem;
-  --entrelinha-2xs: 1rem;
-  --texto-xs: 0.75rem;
-  --entrelinha-xs: 1.125rem;
-  --texto-sm: 0.875rem;
-  --entrelinha-sm: 1.25rem;
-  --texto-base: 1rem;
-  --entrelinha-base: 1.5rem;
-  --texto-lg: 1.125rem;
-  --entrelinha-lg: 1.625rem;
-  --texto-xl: 1.25rem;
-  --entrelinha-xl: 1.75rem;
-  --texto-2xl: 1.5rem;
-  --entrelinha-2xl: 2rem;
-  --texto-3xl: 1.875rem;
-  --entrelinha-3xl: 2.375rem;
+  --texto-2xs: 0.75rem;
+  --entrelinha-2xs: 1.125rem;
+  --texto-xs: 0.875rem;
+  --entrelinha-xs: 1.25rem;
+  --texto-sm: 1rem;
+  --entrelinha-sm: 1.5rem;
+  --texto-base: 1.125rem;
+  --entrelinha-base: 1.75rem;
+  --texto-lg: 1.25rem;
+  --entrelinha-lg: 1.875rem;
+  --texto-xl: 1.5rem;
+  --entrelinha-xl: 2rem;
+  --texto-2xl: 1.75rem;
+  --entrelinha-2xl: 2.25rem;
+  --texto-3xl: 2.25rem;
+  --entrelinha-3xl: 2.75rem;
 
   --fonte-corpo:
     Inter, "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;

@@ -1,6 +1,8 @@
 # Sistema de Agendamento Multi-Tenant — Sistema de Design
 
-**Versão 1.1**
+**Versão 1.2**
+
+> **Alteração da v1.1 para a v1.2:** a escala tipográfica de 2.4 sobe um degrau — o corpo do painel passa de 14 para 16px e o do público de 16 para 18px. Os nomes dos tokens não mudam, e nenhum componente foi tocado: é exatamente o que a camada semântica existe para permitir. Nenhuma outra decisão foi alterada.
 
 Documento visual. Define tokens, primitivos, convenções de componente e a estratégia de identidade das duas aplicações.
 
@@ -199,14 +201,14 @@ Mais uma face de fallback com `size-adjust` calibrado contra as métricas da Int
 
 | Token | Tamanho / entrelinha | Uso |
 |---|---|---|
-| `--texto-2xs` | 11 / 16 | Rótulo de coluna, selo |
-| `--texto-xs` | 12 / 18 | Texto de apoio, hint |
-| `--texto-sm` | 14 / 20 | Corpo do painel, rótulo de campo |
-| `--texto-base` | 16 / 24 | Corpo do público |
-| `--texto-lg` | 18 / 26 | Título de card |
-| `--texto-xl` | 20 / 28 | Título de seção |
-| `--texto-2xl` | 24 / 32 | Título de tela do público |
-| `--texto-3xl` | 30 / 38 | Número de destaque do Resumo (9.8) |
+| `--texto-2xs` | 12 / 18 | Rótulo de coluna, selo |
+| `--texto-xs` | 14 / 20 | Texto de apoio, hint |
+| `--texto-sm` | 16 / 24 | Corpo do painel, rótulo de campo |
+| `--texto-base` | 18 / 28 | Corpo do público |
+| `--texto-lg` | 20 / 30 | Título de card |
+| `--texto-xl` | 24 / 32 | Título de seção |
+| `--texto-2xl` | 28 / 36 | Título de tela do público |
+| `--texto-3xl` | 36 / 44 | Número de destaque do Resumo (9.8) |
 
 **Pesos:** 400, 500 e 600. O 700 fica reservado ao `--texto-3xl`. Negrito pesado engrossa a interface densa do painel e não aparece na referência.
 
