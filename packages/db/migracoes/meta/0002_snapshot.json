@@ -1,0 +1,3205 @@
+{
+  "id": "c5a0c226-45d3-4244-a4a6-70402cbc5517",
+  "prevId": "9514c396-1492-4ae1-a7be-4f841f112e96",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.agendamento_itens": {
+      "name": "agendamento_itens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agendamento_id": {
+          "name": "agendamento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servico_id": {
+          "name": "servico_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "posicao": {
+          "name": "posicao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duracao_min_snapshot": {
+          "name": "duracao_min_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor_centavos_snapshot": {
+          "name": "valor_centavos_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "agendamento_itens_posicao_uk": {
+          "name": "agendamento_itens_posicao_uk",
+          "columns": [
+            {
+              "expression": "agendamento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "posicao",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "agendamento_itens_servico_idx": {
+          "name": "agendamento_itens_servico_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "servico_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "agendamento_itens_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "agendamento_itens_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "agendamento_itens",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "agendamento_itens_agendamento_id_agendamentos_id_fk": {
+          "name": "agendamento_itens_agendamento_id_agendamentos_id_fk",
+          "tableFrom": "agendamento_itens",
+          "tableTo": "agendamentos",
+          "columnsFrom": [
+            "agendamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "agendamento_itens_servico_id_servicos_id_fk": {
+          "name": "agendamento_itens_servico_id_servicos_id_fk",
+          "tableFrom": "agendamento_itens",
+          "tableTo": "servicos",
+          "columnsFrom": [
+            "servico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "agendamento_itens_isolamento": {
+          "name": "agendamento_itens_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.agendamentos": {
+      "name": "agendamentos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profissional_id": {
+          "name": "profissional_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inicia_em": {
+          "name": "inicia_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "termina_em": {
+          "name": "termina_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ocupacao_inicio": {
+          "name": "ocupacao_inicio",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ocupacao_fim": {
+          "name": "ocupacao_fim",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "status_agendamento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor_total_snapshot": {
+          "name": "valor_total_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duracao_total_min_snapshot": {
+          "name": "duracao_total_min_snapshot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "origem": {
+          "name": "origem",
+          "type": "origem_agendamento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qualquer_profissional": {
+          "name": "qualquer_profissional",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "encaixe": {
+          "name": "encaixe",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "observacoes_cliente": {
+          "name": "observacoes_cliente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observacoes_internas": {
+          "name": "observacoes_internas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "token_gestao": {
+          "name": "token_gestao",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "token_gestao_expira_em": {
+          "name": "token_gestao_expira_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_cancelamento": {
+          "name": "tipo_cancelamento",
+          "type": "tipo_cancelamento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por_usuario_id": {
+          "name": "criado_por_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confirmado_em": {
+          "name": "confirmado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "concluido_em": {
+          "name": "concluido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelado_em": {
+          "name": "cancelado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelado_por": {
+          "name": "cancelado_por",
+          "type": "cancelado_por",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_cancelamento": {
+          "name": "motivo_cancelamento",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "agendamentos_profissional_idx": {
+          "name": "agendamentos_profissional_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "profissional_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "inicia_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "agendamentos_ativos_idx": {
+          "name": "agendamentos_ativos_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "inicia_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "status IN ('AGUARDANDO', 'CONFIRMADO')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "agendamentos_cliente_idx": {
+          "name": "agendamentos_cliente_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "cliente_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "inicia_em DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "agendamentos_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "agendamentos_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "agendamentos",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "agendamentos_cliente_id_clientes_id_fk": {
+          "name": "agendamentos_cliente_id_clientes_id_fk",
+          "tableFrom": "agendamentos",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "agendamentos_profissional_id_profissionais_id_fk": {
+          "name": "agendamentos_profissional_id_profissionais_id_fk",
+          "tableFrom": "agendamentos",
+          "tableTo": "profissionais",
+          "columnsFrom": [
+            "profissional_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "agendamentos_criado_por_usuario_id_usuarios_id_fk": {
+          "name": "agendamentos_criado_por_usuario_id_usuarios_id_fk",
+          "tableFrom": "agendamentos",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "criado_por_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "agendamentos_token_gestao_unique": {
+          "name": "agendamentos_token_gestao_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_gestao"
+          ]
+        }
+      },
+      "policies": {
+        "agendamentos_isolamento": {
+          "name": "agendamentos_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.excecoes_agenda": {
+      "name": "excecoes_agenda",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profissional_id": {
+          "name": "profissional_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_excecao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inicia_em": {
+          "name": "inicia_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "termina_em": {
+          "name": "termina_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_inteiro": {
+          "name": "dia_inteiro",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "excecoes_agenda_periodo_idx": {
+          "name": "excecoes_agenda_periodo_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "inicia_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "termina_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "excecoes_agenda_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "excecoes_agenda_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "excecoes_agenda",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "excecoes_agenda_profissional_id_profissionais_id_fk": {
+          "name": "excecoes_agenda_profissional_id_profissionais_id_fk",
+          "tableFrom": "excecoes_agenda",
+          "tableTo": "profissionais",
+          "columnsFrom": [
+            "profissional_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "excecoes_agenda_isolamento": {
+          "name": "excecoes_agenda_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.horarios_trabalho": {
+      "name": "horarios_trabalho",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profissional_id": {
+          "name": "profissional_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_semana": {
+          "name": "dia_semana",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_inicio": {
+          "name": "hora_inicio",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_fim": {
+          "name": "hora_fim",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vigencia_inicio": {
+          "name": "vigencia_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vigencia_fim": {
+          "name": "vigencia_fim",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "horarios_trabalho_estabelecimento_idx": {
+          "name": "horarios_trabalho_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "horarios_trabalho_grade_idx": {
+          "name": "horarios_trabalho_grade_idx",
+          "columns": [
+            {
+              "expression": "profissional_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "dia_semana",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vigencia_inicio",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "horarios_trabalho_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "horarios_trabalho_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "horarios_trabalho",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "horarios_trabalho_profissional_id_profissionais_id_fk": {
+          "name": "horarios_trabalho_profissional_id_profissionais_id_fk",
+          "tableFrom": "horarios_trabalho",
+          "tableTo": "profissionais",
+          "columnsFrom": [
+            "profissional_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "horarios_trabalho_isolamento": {
+          "name": "horarios_trabalho_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.categorias_servico": {
+      "name": "categorias_servico",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "posicao": {
+          "name": "posicao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "categorias_servico_estabelecimento_idx": {
+          "name": "categorias_servico_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "categorias_servico_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "categorias_servico_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "categorias_servico",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "categorias_servico_isolamento": {
+          "name": "categorias_servico_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.profissionais_servicos": {
+      "name": "profissionais_servicos",
+      "schema": "",
+      "columns": {
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profissional_id": {
+          "name": "profissional_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servico_id": {
+          "name": "servico_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duracao_override_min": {
+          "name": "duracao_override_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_override_centavos": {
+          "name": "valor_override_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "profissionais_servicos_estabelecimento_idx": {
+          "name": "profissionais_servicos_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "profissionais_servicos_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "profissionais_servicos_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "profissionais_servicos",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "profissionais_servicos_profissional_id_profissionais_id_fk": {
+          "name": "profissionais_servicos_profissional_id_profissionais_id_fk",
+          "tableFrom": "profissionais_servicos",
+          "tableTo": "profissionais",
+          "columnsFrom": [
+            "profissional_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "profissionais_servicos_servico_id_servicos_id_fk": {
+          "name": "profissionais_servicos_servico_id_servicos_id_fk",
+          "tableFrom": "profissionais_servicos",
+          "tableTo": "servicos",
+          "columnsFrom": [
+            "servico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "profissionais_servicos_profissional_id_servico_id_pk": {
+          "name": "profissionais_servicos_profissional_id_servico_id_pk",
+          "columns": [
+            "profissional_id",
+            "servico_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {
+        "profissionais_servicos_isolamento": {
+          "name": "profissionais_servicos_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.servicos": {
+      "name": "servicos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categoria_id": {
+          "name": "categoria_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(60)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duracao_min": {
+          "name": "duracao_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "folga_antes_min": {
+          "name": "folga_antes_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "folga_depois_min": {
+          "name": "folga_depois_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "valor_centavos": {
+          "name": "valor_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exibicao_valor": {
+          "name": "exibicao_valor",
+          "type": "exibicao_valor",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'FIXO'"
+        },
+        "cor": {
+          "name": "cor",
+          "type": "char(7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "posicao": {
+          "name": "posicao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "excluido_em": {
+          "name": "excluido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "servicos_estabelecimento_idx": {
+          "name": "servicos_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "servicos_slug_uk": {
+          "name": "servicos_slug_uk",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "servicos_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "servicos_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "servicos",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "servicos_categoria_id_categorias_servico_id_fk": {
+          "name": "servicos_categoria_id_categorias_servico_id_fk",
+          "tableFrom": "servicos",
+          "tableTo": "categorias_servico",
+          "columnsFrom": [
+            "categoria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "servicos_isolamento": {
+          "name": "servicos_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.configuracoes": {
+      "name": "configuracoes",
+      "schema": "",
+      "columns": {
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "granularidade_slot_min": {
+          "name": "granularidade_slot_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 15
+        },
+        "estrategia_slot": {
+          "name": "estrategia_slot",
+          "type": "estrategia_slot",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'GRADE'"
+        },
+        "antecedencia_minima_min": {
+          "name": "antecedencia_minima_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 60
+        },
+        "janela_agendamento_dias": {
+          "name": "janela_agendamento_dias",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 14
+        },
+        "prazo_cancelamento_min": {
+          "name": "prazo_cancelamento_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1440
+        },
+        "confirmacao_automatica": {
+          "name": "confirmacao_automatica",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "permite_sem_cadastro": {
+          "name": "permite_sem_cadastro",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "permite_multiplos_servicos": {
+          "name": "permite_multiplos_servicos",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "exige_otp_telefone": {
+          "name": "exige_otp_telefone",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "staff_ve_agenda_completa": {
+          "name": "staff_ve_agenda_completa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "folga_pode_exceder_janela": {
+          "name": "folga_pode_exceder_janela",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "max_ativos_por_cliente": {
+          "name": "max_ativos_por_cliente",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "configuracoes_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "configuracoes_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "configuracoes",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "configuracoes_isolamento": {
+          "name": "configuracoes_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.estabelecimentos": {
+      "name": "estabelecimentos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "segmento": {
+          "name": "segmento",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fuso_horario": {
+          "name": "fuso_horario",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "logo_url": {
+          "name": "logo_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cor_tema": {
+          "name": "cor_tema",
+          "type": "char(7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefone_publico": {
+          "name": "telefone_publico",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endereco_publico": {
+          "name": "endereco_publico",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plano": {
+          "name": "plano",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "status_estabelecimento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "excluido_em": {
+          "name": "excluido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "estabelecimentos_slug_unique": {
+          "name": "estabelecimentos_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {
+        "estabelecimentos_leitura": {
+          "name": "estabelecimentos_leitura",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "true"
+        },
+        "estabelecimentos_alteracao": {
+          "name": "estabelecimentos_alteracao",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "agendamento_gestor"
+          ],
+          "using": "id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        },
+        "estabelecimentos_remocao": {
+          "name": "estabelecimentos_remocao",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "agendamento_gestor"
+          ],
+          "using": "id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.auditoria": {
+      "name": "auditoria",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ator_usuario_id": {
+          "name": "ator_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ator_tipo": {
+          "name": "ator_tipo",
+          "type": "ator_tipo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "entidade": {
+          "name": "entidade",
+          "type": "varchar(60)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entidade_id": {
+          "name": "entidade_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acao": {
+          "name": "acao",
+          "type": "varchar(40)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "diff": {
+          "name": "diff",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "auditoria_entidade_idx": {
+          "name": "auditoria_entidade_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entidade",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entidade_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "auditoria_criado_em_idx": {
+          "name": "auditoria_criado_em_idx",
+          "columns": [
+            {
+              "expression": "criado_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "auditoria_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "auditoria_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "auditoria",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auditoria_ator_usuario_id_usuarios_id_fk": {
+          "name": "auditoria_ator_usuario_id_usuarios_id_fk",
+          "tableFrom": "auditoria",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "ator_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auditoria_cliente_id_clientes_id_fk": {
+          "name": "auditoria_cliente_id_clientes_id_fk",
+          "tableFrom": "auditoria",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "auditoria_isolamento": {
+          "name": "auditoria_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.lancamentos": {
+      "name": "lancamentos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_lancamento": {
+          "name": "data_lancamento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profissional_id": {
+          "name": "profissional_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_lancamento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agendamento_id": {
+          "name": "agendamento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "servico_id": {
+          "name": "servico_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nome_cliente": {
+          "name": "nome_cliente",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantidade": {
+          "name": "quantidade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "valor_centavos": {
+          "name": "valor_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observacao": {
+          "name": "observacao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estorna_lancamento_id": {
+          "name": "estorna_lancamento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estornado_por_lancamento_id": {
+          "name": "estornado_por_lancamento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por_usuario_id": {
+          "name": "criado_por_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "lancamentos_data_idx": {
+          "name": "lancamentos_data_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "data_lancamento",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "lancamentos_agendamento_uk": {
+          "name": "lancamentos_agendamento_uk",
+          "columns": [
+            {
+              "expression": "agendamento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "agendamento_id IS NOT NULL AND estorna_lancamento_id IS NULL AND estornado_por_lancamento_id IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "lancamentos_total_dia_uk": {
+          "name": "lancamentos_total_dia_uk",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "data_lancamento",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "profissional_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "tipo = 'TOTAL_DIA' AND estorna_lancamento_id IS NULL AND estornado_por_lancamento_id IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "lancamentos_estorno_uk": {
+          "name": "lancamentos_estorno_uk",
+          "columns": [
+            {
+              "expression": "estorna_lancamento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "estorna_lancamento_id IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "lancamentos_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "lancamentos_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lancamentos_profissional_id_profissionais_id_fk": {
+          "name": "lancamentos_profissional_id_profissionais_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "profissionais",
+          "columnsFrom": [
+            "profissional_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lancamentos_agendamento_id_agendamentos_id_fk": {
+          "name": "lancamentos_agendamento_id_agendamentos_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "agendamentos",
+          "columnsFrom": [
+            "agendamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lancamentos_servico_id_servicos_id_fk": {
+          "name": "lancamentos_servico_id_servicos_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "servicos",
+          "columnsFrom": [
+            "servico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lancamentos_cliente_id_clientes_id_fk": {
+          "name": "lancamentos_cliente_id_clientes_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lancamentos_estorna_lancamento_id_lancamentos_id_fk": {
+          "name": "lancamentos_estorna_lancamento_id_lancamentos_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "lancamentos",
+          "columnsFrom": [
+            "estorna_lancamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lancamentos_estornado_por_lancamento_id_lancamentos_id_fk": {
+          "name": "lancamentos_estornado_por_lancamento_id_lancamentos_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "lancamentos",
+          "columnsFrom": [
+            "estornado_por_lancamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lancamentos_criado_por_usuario_id_usuarios_id_fk": {
+          "name": "lancamentos_criado_por_usuario_id_usuarios_id_fk",
+          "tableFrom": "lancamentos",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "criado_por_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "lancamentos_isolamento": {
+          "name": "lancamentos_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "lancamentos_agendamento_chk": {
+          "name": "lancamentos_agendamento_chk",
+          "value": "(\"lancamentos\".\"tipo\" = 'AGENDAMENTO') = (\"lancamentos\".\"agendamento_id\" IS NOT NULL)"
+        },
+        "lancamentos_servico_chk": {
+          "name": "lancamentos_servico_chk",
+          "value": "\"lancamentos\".\"servico_id\" IS NULL OR \"lancamentos\".\"tipo\" = 'AVULSO'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.notificacoes": {
+      "name": "notificacoes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agendamento_id": {
+          "name": "agendamento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "canal": {
+          "name": "canal",
+          "type": "canal_notificacao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "template": {
+          "name": "template",
+          "type": "varchar(60)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "destinatario": {
+          "name": "destinatario",
+          "type": "varchar(160)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agendada_para": {
+          "name": "agendada_para",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "enviada_em": {
+          "name": "enviada_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "status_notificacao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "erro": {
+          "name": "erro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "notificacoes_estabelecimento_idx": {
+          "name": "notificacoes_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notificacoes_fila_idx": {
+          "name": "notificacoes_fila_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "agendada_para",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "notificacoes_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "notificacoes_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "notificacoes",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "notificacoes_agendamento_id_agendamentos_id_fk": {
+          "name": "notificacoes_agendamento_id_agendamentos_id_fk",
+          "tableFrom": "notificacoes",
+          "tableTo": "agendamentos",
+          "columnsFrom": [
+            "agendamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "notificacoes_isolamento": {
+          "name": "notificacoes_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.codigos_verificacao": {
+      "name": "codigos_verificacao",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "destino": {
+          "name": "destino",
+          "type": "varchar(160)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canal": {
+          "name": "canal",
+          "type": "canal_verificacao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo_hash": {
+          "name": "codigo_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tentativas": {
+          "name": "tentativas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "expira_em": {
+          "name": "expira_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consumido_em": {
+          "name": "consumido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "codigos_verificacao_destino_idx": {
+          "name": "codigos_verificacao_destino_idx",
+          "columns": [
+            {
+              "expression": "destino",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expira_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.identidades_externas": {
+      "name": "identidades_externas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provedor": {
+          "name": "provedor",
+          "type": "provedor_externo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provedor_id": {
+          "name": "provedor_id",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "citext",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "identidades_externas_provedor_uk": {
+          "name": "identidades_externas_provedor_uk",
+          "columns": [
+            {
+              "expression": "provedor",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provedor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "identidades_externas_usuario_id_usuarios_id_fk": {
+          "name": "identidades_externas_usuario_id_usuarios_id_fk",
+          "tableFrom": "identidades_externas",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sessoes": {
+      "name": "sessoes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "refresh_token_hash": {
+          "name": "refresh_token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ultimo_uso_em": {
+          "name": "ultimo_uso_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expira_em": {
+          "name": "expira_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revogada_em": {
+          "name": "revogada_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "sessoes_usuario_idx": {
+          "name": "sessoes_usuario_idx",
+          "columns": [
+            {
+              "expression": "usuario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expira_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sessoes_usuario_id_usuarios_id_fk": {
+          "name": "sessoes_usuario_id_usuarios_id_fk",
+          "tableFrom": "sessoes",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.usuarios": {
+      "name": "usuarios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "citext",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "telefone": {
+          "name": "telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "senha_hash": {
+          "name": "senha_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email_verificado_em": {
+          "name": "email_verificado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefone_verificado_em": {
+          "name": "telefone_verificado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ultimo_login_em": {
+          "name": "ultimo_login_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "usuarios_telefone_verificado_uk": {
+          "name": "usuarios_telefone_verificado_uk",
+          "columns": [
+            {
+              "expression": "telefone",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "telefone_verificado_em IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "usuarios_email_unique": {
+          "name": "usuarios_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.vinculos": {
+      "name": "vinculos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "papel": {
+          "name": "papel",
+          "type": "papel",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "status_vinculo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "convidado_em": {
+          "name": "convidado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "vinculos_estabelecimento_idx": {
+          "name": "vinculos_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vinculos_usuario_estabelecimento_uk": {
+          "name": "vinculos_usuario_estabelecimento_uk",
+          "columns": [
+            {
+              "expression": "usuario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vinculos_proprietario_unico_uk": {
+          "name": "vinculos_proprietario_unico_uk",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "papel = 'PROPRIETARIO' AND status = 'ATIVO'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "vinculos_usuario_id_usuarios_id_fk": {
+          "name": "vinculos_usuario_id_usuarios_id_fk",
+          "tableFrom": "vinculos",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "vinculos_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "vinculos_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "vinculos",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "vinculos_isolamento": {
+          "name": "vinculos_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        },
+        "vinculos_proprios": {
+          "name": "vinculos_proprios",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "agendamento_gestor"
+          ],
+          "using": "usuario_id = nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.clientes": {
+      "name": "clientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "telefone": {
+          "name": "telefone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "citext",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_nascimento": {
+          "name": "data_nascimento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observacoes_internas": {
+          "name": "observacoes_internas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bloqueado": {
+          "name": "bloqueado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "motivo_bloqueio": {
+          "name": "motivo_bloqueio",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "excluido_em": {
+          "name": "excluido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "clientes_estabelecimento_idx": {
+          "name": "clientes_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clientes_telefone_uk": {
+          "name": "clientes_telefone_uk",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "telefone",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clientes_email_uk": {
+          "name": "clientes_email_uk",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "email IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "clientes_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "clientes_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "clientes",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "clientes_usuario_id_usuarios_id_fk": {
+          "name": "clientes_usuario_id_usuarios_id_fk",
+          "tableFrom": "clientes",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "clientes_isolamento": {
+          "name": "clientes_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.profissionais": {
+      "name": "profissionais",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "estabelecimento_id": {
+          "name": "estabelecimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vinculo_id": {
+          "name": "vinculo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nome_exibicao": {
+          "name": "nome_exibicao",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bio": {
+          "name": "bio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar_url": {
+          "name": "avatar_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "posicao": {
+          "name": "posicao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "excluido_em": {
+          "name": "excluido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "profissionais_estabelecimento_idx": {
+          "name": "profissionais_estabelecimento_idx",
+          "columns": [
+            {
+              "expression": "estabelecimento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "profissionais_vinculo_uk": {
+          "name": "profissionais_vinculo_uk",
+          "columns": [
+            {
+              "expression": "vinculo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "vinculo_id IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "profissionais_estabelecimento_id_estabelecimentos_id_fk": {
+          "name": "profissionais_estabelecimento_id_estabelecimentos_id_fk",
+          "tableFrom": "profissionais",
+          "tableTo": "estabelecimentos",
+          "columnsFrom": [
+            "estabelecimento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "profissionais_vinculo_id_vinculos_id_fk": {
+          "name": "profissionais_vinculo_id_vinculos_id_fk",
+          "tableFrom": "profissionais",
+          "tableTo": "vinculos",
+          "columnsFrom": [
+            "vinculo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "profissionais_isolamento": {
+          "name": "profissionais_isolamento",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "agendamento_gestor",
+            "agendamento_publico"
+          ],
+          "using": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid",
+          "withCheck": "estabelecimento_id = nullif(current_setting('app.estabelecimento_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.ator_tipo": {
+      "name": "ator_tipo",
+      "schema": "public",
+      "values": [
+        "USUARIO",
+        "CLIENTE",
+        "SISTEMA"
+      ]
+    },
+    "public.canal_notificacao": {
+      "name": "canal_notificacao",
+      "schema": "public",
+      "values": [
+        "EMAIL",
+        "SMS",
+        "WHATSAPP",
+        "PUSH"
+      ]
+    },
+    "public.canal_verificacao": {
+      "name": "canal_verificacao",
+      "schema": "public",
+      "values": [
+        "SMS",
+        "WHATSAPP",
+        "EMAIL"
+      ]
+    },
+    "public.cancelado_por": {
+      "name": "cancelado_por",
+      "schema": "public",
+      "values": [
+        "CLIENTE",
+        "EQUIPE",
+        "SISTEMA"
+      ]
+    },
+    "public.estrategia_slot": {
+      "name": "estrategia_slot",
+      "schema": "public",
+      "values": [
+        "GRADE",
+        "COMPACTO"
+      ]
+    },
+    "public.exibicao_valor": {
+      "name": "exibicao_valor",
+      "schema": "public",
+      "values": [
+        "FIXO",
+        "A_PARTIR_DE",
+        "OCULTO",
+        "GRATUITO"
+      ]
+    },
+    "public.origem_agendamento": {
+      "name": "origem_agendamento",
+      "schema": "public",
+      "values": [
+        "PUBLICO",
+        "ADMIN"
+      ]
+    },
+    "public.papel": {
+      "name": "papel",
+      "schema": "public",
+      "values": [
+        "PROPRIETARIO",
+        "ADMIN",
+        "FUNCIONARIO"
+      ]
+    },
+    "public.provedor_externo": {
+      "name": "provedor_externo",
+      "schema": "public",
+      "values": [
+        "GOOGLE"
+      ]
+    },
+    "public.status_agendamento": {
+      "name": "status_agendamento",
+      "schema": "public",
+      "values": [
+        "AGUARDANDO",
+        "CONFIRMADO",
+        "CONCLUIDO",
+        "CANCELADO",
+        "FALTOU"
+      ]
+    },
+    "public.status_estabelecimento": {
+      "name": "status_estabelecimento",
+      "schema": "public",
+      "values": [
+        "ATIVO",
+        "SUSPENSO",
+        "TESTE",
+        "CANCELADO"
+      ]
+    },
+    "public.status_notificacao": {
+      "name": "status_notificacao",
+      "schema": "public",
+      "values": [
+        "PENDENTE",
+        "ENVIADA",
+        "FALHOU",
+        "CANCELADA"
+      ]
+    },
+    "public.status_vinculo": {
+      "name": "status_vinculo",
+      "schema": "public",
+      "values": [
+        "CONVIDADO",
+        "ATIVO",
+        "DESATIVADO"
+      ]
+    },
+    "public.tipo_cancelamento": {
+      "name": "tipo_cancelamento",
+      "schema": "public",
+      "values": [
+        "DESISTENCIA",
+        "REMARCACAO",
+        "INDISPONIBILIDADE",
+        "EXPIRACAO"
+      ]
+    },
+    "public.tipo_excecao": {
+      "name": "tipo_excecao",
+      "schema": "public",
+      "values": [
+        "BLOQUEIO",
+        "EXTRA"
+      ]
+    },
+    "public.tipo_lancamento": {
+      "name": "tipo_lancamento",
+      "schema": "public",
+      "values": [
+        "AGENDAMENTO",
+        "AVULSO",
+        "TOTAL_DIA"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {
+    "agendamento_gestor": {
+      "name": "agendamento_gestor",
+      "createDb": false,
+      "createRole": false,
+      "inherit": true
+    },
+    "agendamento_publico": {
+      "name": "agendamento_publico",
+      "createDb": false,
+      "createRole": false,
+      "inherit": true
+    }
+  },
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -65,7 +65,7 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
   const portas = await criarPortas(deps.config, app.log, limitador);
 
   await app.register(pluginDeErros);
-  await app.register(pluginDeAutenticacao);
+  await app.register(pluginDeAutenticacao, { config: deps.config, pools: deps.pools });
   await app.register(pluginDeLimiteDeTaxa, {
     limitador,
     limites: LIMITES,

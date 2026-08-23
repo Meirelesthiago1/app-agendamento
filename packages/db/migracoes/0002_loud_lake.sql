@@ -1,0 +1,1 @@
+CREATE POLICY "vinculos_proprios" ON "vinculos" AS PERMISSIVE FOR SELECT TO "agendamento_gestor" USING (usuario_id = nullif(current_setting('app.usuario_id', true), '')::uuid);

@@ -27,6 +27,23 @@ export function politicaDeTenant(tabela: string) {
 }
 
 /**
+ * O usuário precisa enxergar os próprios vínculos **antes** de existir tenant:
+ * é a consulta que descobre de quais estabelecimentos ele participa, e ela roda
+ * no login, quando `app.estabelecimento_id` ainda não foi definido.
+ *
+ * Políticas permissivas se somam em OR, então esta convive com a de tenant sem
+ * afrouxá-la: quem não é o próprio usuário continua limitado ao tenant corrente.
+ */
+export function politicaDosProprios() {
+  return pgPolicy('vinculos_proprios', {
+    as: 'permissive',
+    for: 'select',
+    to: papelGestor,
+    using: sql`usuario_id = nullif(current_setting('app.usuario_id', true), '')::uuid`,
+  });
+}
+
+/**
  * A tabela raiz é o diretório de tenants, e não pode usar a política acima: o
  * middleware do público resolve `{slug}.dominio.com` antes de existir contexto,
  * e a criação do estabelecimento acontece antes de haver tenant para apontar.

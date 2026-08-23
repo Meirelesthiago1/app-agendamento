@@ -12,7 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { canalVerificacao, papel, provedorExterno, statusVinculo } from './enums.js';
 import { estabelecimentos } from './estabelecimentos.js';
-import { politicaDeTenant } from './rls.js';
+import { politicaDeTenant, politicaDosProprios } from './rls.js';
 import { atualizadoEm, citext, criadoEm, idPrimario } from './tipos.js';
 
 /**
@@ -119,5 +119,6 @@ export const vinculos = pgTable(
       .on(tabela.estabelecimentoId)
       .where(sql`papel = 'PROPRIETARIO' AND status = 'ATIVO'`),
     politicaDeTenant('vinculos'),
+    politicaDosProprios(),
   ],
 );

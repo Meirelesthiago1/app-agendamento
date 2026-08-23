@@ -38,6 +38,23 @@ export function criarPools(config: Config): Pools {
 }
 
 /**
+ * Transação sem tenant, para o que roda **antes** de saber qual é: resolver a
+ * sessão e listar os vínculos do usuário. Sem ela, `set_config(..., true)` e a
+ * consulta seguinte cairiam em transações implícitas diferentes, e a variável
+ * seria descartada no meio do caminho.
+ */
+export async function emTransacao<T>(
+  executor: Executor,
+  acao: (tx: Transacao) => Promise<T>,
+): Promise<T> {
+  try {
+    return await executor.transaction(acao);
+  } catch (erro) {
+    throw traduzirErroDoBanco(erro);
+  }
+}
+
+/**
  * A transação vive no caso de uso, não na rota — que não sabe o que é atômico —
  * nem no repositório, que enxergaria só um pedaço (6.4, T11).
  *

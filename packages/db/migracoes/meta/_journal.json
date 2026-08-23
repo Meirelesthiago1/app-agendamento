@@ -15,6 +15,13 @@
       "when": 1787495876181,
       "tag": "0001_exclusao_e_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787512889263,
+      "tag": "0002_loud_lake",
+      "breakpoints": true
     }
   ]
 }
