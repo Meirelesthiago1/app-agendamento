@@ -5,8 +5,8 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: etapas 0 e 1 concluídas e verificadas no CI. A etapa 2
-(`packages/dominio`) é o próximo passo.** O detalhe está em "Onde a
+**Estado: etapas 0, 1 e 2 concluídas e verificadas no CI. A etapa 3
+(contratos e casca da API) é o próximo passo.** O detalhe está em "Onde a
 implementação está", no fim deste arquivo.
 
 ---
@@ -125,6 +125,7 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 |---|---|---|
 | 0 — Fundação | `main` | Monorepo, Docker Compose, CI, as três regras executáveis |
 | 1 — Banco | `etapa-1-banco` | 19 tabelas, RLS, dois papéis, `EXCLUDE`, semente, os dois testes de 10.1 |
+| 2 — Domínio | `etapa-1-banco` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
 
 Levantar o ambiente do zero:
 
@@ -151,6 +152,16 @@ pnpm verificar                                       # lint, tipos, regras, buil
   Sem o `nullif`, a variável volta como string vazia depois do commit e `''::uuid`
   levanta 22P02 na conexão seguinte do pool — "sem tenant" viraria erro onde 10.1
   exige resultado vazio.
+- Aritmética de calendário em `dominio/tempo` é ancorada em UTC. Interpretar
+  `AAAA-MM-DD` no fuso da máquina faz somar um dia cair em `01:00` na entrada do
+  horário de verão, e o resultado passa a depender do fuso do servidor.
+- `totalizar` devolve `OCULTO` quando **todos** os itens são ocultos — 9.2 só
+  trata do caso misto, e "a partir de R$ 0,00" seria pior que não exibir.
+- A folga presa à janela (`folga_pode_exceder_janela = false`) é verificada nas
+  **duas** pontas. O pseudocódigo de 6.1 checa só `ocup_fim`, mas a folga da
+  frente transborda igual.
+- A regra de fronteira de `dominio` ignora `*.teste.ts`: ela garante que o pacote
+  rode no browser, e teste não entra no `dist/`.
 
 ## Decisões ainda abertas
 
