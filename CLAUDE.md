@@ -5,8 +5,9 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: planejamento concluído, implementação não iniciada.** Não existe código
-ainda. A etapa 0 (fundação do monorepo) é o próximo passo.
+**Estado: etapas 0 e 1 concluídas e verificadas no CI. A etapa 2
+(`packages/dominio`) é o próximo passo.** O detalhe está em "Onde a
+implementação está", no fim deste arquivo.
 
 ---
 
@@ -118,15 +119,40 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 
 ---
 
+## Onde a implementação está
+
+| Etapa | Branch | O que ficou de pé |
+|---|---|---|
+| 0 — Fundação | `main` | Monorepo, Docker Compose, CI, as três regras executáveis |
+| 1 — Banco | `etapa-1-banco` | 19 tabelas, RLS, dois papéis, `EXCLUDE`, semente, os dois testes de 10.1 |
+
+Levantar o ambiente do zero:
+
+```
+pnpm install
+pnpm servicos                                        # Postgres 18 e Mailpit
+pnpm --filter @agendamento/db exec drizzle-kit migrate
+pnpm --filter @agendamento/db semear                 # dois estabelecimentos
+pnpm verificar                                       # lint, tipos, regras, build, testes
+```
+
+`DIRETO_BANCO_URL` precisa estar no ambiente ou em `.env` — ver `.env.exemplo`.
+
+**Decidido durante a implementação, fora dos seis documentos:**
+
+- Escopo dos pacotes: `@agendamento/*`. Repositório no GitHub, CI em Actions,
+  verificando **toda branch enviada** — não só PR.
+- `dominio`, `contratos` e `db` compilam para `dist/`; `ui` exporta fonte, e Vite
+  e Next a transpilam.
+- Driver `pg`, porque o pg-boss (T8) já o usa — evita dois drivers.
+- Os dois papéis de banco nascem `LOGIN` sem senha; a senha é de ambiente, nunca
+  de migração.
+- A política de RLS usa `nullif(current_setting('app.estabelecimento_id', true), '')`.
+  Sem o `nullif`, a variável volta como string vazia depois do commit e `''::uuid`
+  levanta 22P02 na conexão seguinte do pool — "sem tenant" viraria erro onde 10.1
+  exige resultado vazio.
+
 ## Decisões ainda abertas
-
-**Bloqueiam a etapa 0:**
-
-- **Nome definitivo e escopo dos pacotes** (`@algo/dominio`). A pasta se chama
-  `agendamento` porque é o que a §4.1 do stack especifica — não é uma decisão de
-  marca. Enquanto não houver nome, renomear é barato.
-- **Onde vive o repositório e qual CI.** O critério de pronto da etapa 0 é CI verde
-  em PR vazio.
 
 **Lacunas conhecidas, cada uma vencendo numa etapa específica:**
 
@@ -137,6 +163,9 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | Rate limit de `slots` e `dias_com_vaga` sem número definido | Etapa 11 |
 | `token_gestao_expira_em` definido como "alguns dias" — não implementável | Etapa 11 |
 | Como testar `{slug}.dominio.com` localmente (hosts do Windows não aceita curinga) | Etapa 11 |
+| Criar estabelecimento antes de existir contexto de tenant — a RLS de `estabelecimentos` cobre leitura e alteração, não criação | Etapa 8 |
+| "Existência de ocupação" é mais estrito do que GRANT de coluna expressa; pede view com `security_invoker`, que é o que fixa o piso do Postgres em 15 | Etapa 11 |
+| Expurgo da auditoria atravessa tenants, e a RLS o zera — decidir entre papel dono e laço por tenant | Etapa 12 |
 | Hospedagem — recomendação em `docs/operacao.md` §2, decisão em aberto por §2.5 | Etapa 14 |
 
 **LGPD: adiada por decisão do usuário.** Nenhum dos seis documentos trata do
