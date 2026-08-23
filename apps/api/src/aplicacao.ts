@@ -1,4 +1,4 @@
-import { ErroDominio, type LimitadorTaxa } from '@agendamento/dominio';
+import { ErroDominio, type LimitadorTaxa, podeExecutar } from '@agendamento/dominio';
 import { sql } from 'drizzle-orm';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
@@ -41,6 +41,9 @@ const LIMITES = {
   '/auth/entrada': { requisicoes: 10, janelaSegundos: 60 },
   '/auth/cadastro': { requisicoes: 5, janelaSegundos: 60 },
   '/auth/reenviar-verificacao': { requisicoes: 3, janelaSegundos: 60 },
+  '/auth/recuperacao': { requisicoes: 3, janelaSegundos: 60 },
+  '/auth/nova-senha': { requisicoes: 10, janelaSegundos: 60 },
+  '/auth/convite': { requisicoes: 10, janelaSegundos: 60 },
 } as const;
 
 /** O tenant já foi resolvido pelo plugin de contexto; aqui só se confere. */
@@ -164,6 +167,65 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
   });
 
   registrarRota(app, 'eu', async ({ requisicao }) => comoUsuarioDaSessao(requisicao));
+
+  registrarRota(app, 'convidar', async ({ corpo, requisicao }) => {
+    const autenticado = requisicao.autenticado;
+
+    if (autenticado === null) {
+      throw new ErroDominio('SEM_PERMISSAO', 'Entre para continuar.');
+    }
+
+    // A matriz de 2.3 decide, e ela vive em `packages/dominio` como constante
+    if (
+      !podeExecutar(
+        { papel: autenticado.papel, profissionalId: autenticado.profissionalId },
+        'usuarios.gerenciar',
+      )
+    ) {
+      throw new ErroDominio('SEM_PERMISSAO', 'Seu perfil não permite convidar pessoas.');
+    }
+
+    await auth.convidarParaEquipe(dependenciasDeAuth(), requisicao.resolvido().contexto, {
+      ...corpo,
+      estabelecimentoId: autenticado.estabelecimentoId,
+      convidadoPor: autenticado.nome,
+    });
+
+    return { ok: true };
+  });
+
+  registrarRota(app, 'aceitarConvite', async ({ corpo, requisicao, reply }) => {
+    const sessao = await auth.aceitarConvite(dependenciasDeAuth(), {
+      ...corpo,
+      userAgent: requisicao.headers['user-agent'] ?? null,
+      ip: requisicao.ip,
+    });
+
+    reply.setCookie(NOME_DO_COOKIE, sessao.token, app.opcoesDoCookieDeSessao());
+
+    return {
+      id: sessao.usuarioId,
+      nome: sessao.nome,
+      email: sessao.email,
+      estabelecimentos: [],
+      estabelecimentoAtual: null,
+    };
+  });
+
+  registrarRota(app, 'pedirRecuperacao', async ({ corpo, requisicao }) => {
+    await auth.pedirRecuperacao(dependenciasDeAuth(), corpo.email, requisicao.ip);
+
+    return { ok: true };
+  });
+
+  registrarRota(app, 'redefinirSenha', async ({ corpo, reply }) => {
+    await auth.redefinirSenha(dependenciasDeAuth(), corpo.token, corpo.senha);
+
+    // Todas as sessões caíram, inclusive a de quem está redefinindo
+    reply.clearCookie(NOME_DO_COOKIE, app.opcoesDoCookieDeSessao());
+
+    return { ok: true };
+  });
 
   registrarRota(app, 'catalogo', async ({ requisicao }) => {
     const { contexto, estabelecimento } = exigirTenant(requisicao);

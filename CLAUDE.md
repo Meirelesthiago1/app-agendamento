@@ -5,8 +5,8 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: etapas 0 a 4 concluídas. A etapa 5 (autenticação e sessão) é o
-próximo passo.** O detalhe está em "Onde a
+**Estado: etapas 0 a 5 concluídas. A etapa 6 (casca do painel) é o próximo
+passo.** O detalhe está em "Onde a
 implementação está", no fim deste arquivo.
 
 ---
@@ -127,7 +127,8 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | 1 — Banco | `main` | 19 tabelas, RLS, dois papéis, `EXCLUDE`, semente, os dois testes de 10.1 |
 | 2 — Domínio | `main` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
 | 3 — API | `main` | `contratos` com `ROTAS` e cliente próprio, Fastify com os quatro plugins, `unidadeDeTrabalho`, as cinco portas locais, e quatro rotas reais |
-| 4 — Design | `etapa-4-design` | Tokens em três camadas, `derivarPaleta` em OKLCH, os 18 componentes do lote de fundação, e o playground com `/tokens`, `/primitivos` e `/marca` |
+| 4 — Design | `main` | Tokens em três camadas, `derivarPaleta` em OKLCH, os 18 componentes do lote de fundação, e o playground com `/tokens`, `/primitivos` e `/marca` |
+| 5 — Autenticação | `etapa-5-auth` | argon2id, sessão opaca de 30 dias, os três transacionais em React Email, cadastro, convite de equipe e recuperação de senha |
 
 Levantar o ambiente do zero:
 
@@ -223,6 +224,18 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
   embutidos; sem a aresta, a paleta seria copiada para dentro da API, que é o que
   D14 impede. O ponto de entrada `paleta` é só matemática de cor, sem React nem
   DOM: a API não arrasta a biblioteca de componentes.
+- **`codigos_verificacao.finalidade` entra na busca, não só no registro.** Sem
+  ela, um token emitido para confirmar e-mail seria aceito como redefinição de
+  senha: o hash é o mesmo. `referencia_id` é `usuario_id` na verificação e na
+  recuperação, e `estabelecimento_id` no convite — porque aceitar acontece sem
+  sessão e sem tenant, e é esse valor que abre o contexto de RLS.
+- O estabelecimento corrente do painel vem do cabeçalho `x-estabelecimento`,
+  conferido contra os vínculos. Pedir um que não é seu responde "não
+  encontrado", igual a não existir (1.1 do conteúdo).
+- Redefinir senha revoga **todas** as sessões do usuário.
+- Teste de autenticação precisa injetar `limitador` permissivo: o limite real de
+  cinco cadastros por minuto barra o próprio arquivo de teste. Quem verifica o
+  limitador é `caminho-completo.teste.ts`.
 - O `dev` da API usa `node --import tsx`. O Node executa `.ts` nativamente mas
   **não** `.tsx` — ele remove tipos, não transforma JSX, e os templates de e-mail
   são JSX. O build por `tsc` segue igual.

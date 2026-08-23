@@ -72,7 +72,12 @@ export const codigosVerificacao = pgTable(
     destino: varchar('destino', { length: 160 }).notNull(),
     canal: canalVerificacao('canal').notNull(),
     finalidade: finalidadeVerificacao('finalidade').notNull(),
-    /** `usuario_id` ou `vinculo_id`, conforme a finalidade. */
+    /**
+     * Conforme a finalidade: `usuario_id` na verificação e na recuperação;
+     * `estabelecimento_id` no convite — porque aceitar acontece sem sessão e
+     * sem tenant, e é este valor que permite abrir o contexto para alcançar o
+     * vínculo sob RLS.
+     */
     referenciaId: uuid('referencia_id'),
     codigoHash: text('codigo_hash').notNull(),
     tentativas: integer('tentativas').notNull().default(0),

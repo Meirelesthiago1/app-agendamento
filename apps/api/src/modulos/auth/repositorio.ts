@@ -1,4 +1,4 @@
-import { profissionais, sessoes, usuarios, vinculos } from '@agendamento/db';
+import { estabelecimentos, profissionais, sessoes, usuarios, vinculos } from '@agendamento/db';
 import type { Papel } from '@agendamento/dominio';
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import type { Executor, Transacao } from '../../infra/db/pools.ts';
@@ -201,4 +201,112 @@ export async function buscarProfissionalDoVinculo(
     .limit(1);
 
   return linha?.id ?? null;
+}
+
+export async function criarUsuarioSemSenha(
+  tx: Transacao,
+  dados: { nome: string; email: string },
+): Promise<string> {
+  const [linha] = await tx.insert(usuarios).values(dados).returning({ id: usuarios.id });
+
+  if (linha === undefined) {
+    throw new Error('Falha ao criar usuario convidado');
+  }
+
+  return linha.id;
+}
+
+export async function convidar(
+  tx: Transacao,
+  dados: { usuarioId: string; estabelecimentoId: string; papel: Papel },
+): Promise<void> {
+  await tx
+    .insert(vinculos)
+    .values({ ...dados, status: 'CONVIDADO', convidadoEm: new Date() })
+    .onConflictDoUpdate({
+      // Reconvidar quem já foi convidado troca o papel e renova a data, em vez
+      // de falhar na chave única de (usuario_id, estabelecimento_id)
+      target: [vinculos.usuarioId, vinculos.estabelecimentoId],
+      set: { papel: dados.papel, convidadoEm: new Date(), atualizadoEm: new Date() },
+      setWhere: eq(vinculos.status, 'CONVIDADO'),
+    });
+}
+
+export type ConviteAberto = {
+  vinculoId: string;
+  usuarioId: string;
+  papel: Papel;
+  temSenha: boolean;
+};
+
+/**
+ * Aceitar acontece **sem sessão e sem tenant**. O `estabelecimentoId` vem do
+ * token, e é ele que abre o contexto de RLS para alcançar o vínculo — sem isso
+ * a consulta volta vazia, em silêncio.
+ */
+export async function buscarConviteAberto(
+  tx: Transacao,
+  estabelecimentoId: string,
+  email: string,
+): Promise<ConviteAberto | null> {
+  await tx.execute(sql`SELECT set_config('app.estabelecimento_id', ${estabelecimentoId}, true)`);
+
+  const [linha] = await tx
+    .select({
+      vinculoId: vinculos.id,
+      usuarioId: usuarios.id,
+      papel: vinculos.papel,
+      senhaHash: usuarios.senhaHash,
+    })
+    .from(vinculos)
+    .innerJoin(usuarios, eq(usuarios.id, vinculos.usuarioId))
+    .where(
+      and(
+        eq(vinculos.estabelecimentoId, estabelecimentoId),
+        eq(usuarios.email, email),
+        eq(vinculos.status, 'CONVIDADO'),
+      ),
+    )
+    .limit(1);
+
+  if (linha === undefined) {
+    return null;
+  }
+
+  return {
+    vinculoId: linha.vinculoId,
+    usuarioId: linha.usuarioId,
+    papel: linha.papel,
+    temSenha: linha.senhaHash !== null,
+  };
+}
+
+export async function ativarVinculo(tx: Transacao, vinculoId: string): Promise<void> {
+  await tx
+    .update(vinculos)
+    .set({ status: 'ATIVO', atualizadoEm: new Date() })
+    .where(eq(vinculos.id, vinculoId));
+}
+
+export type MarcaDoEstabelecimento = {
+  nome: string;
+  corTema: string | null;
+  telefonePublico: string | null;
+};
+
+export async function buscarMarca(
+  tx: Transacao,
+  estabelecimentoId: string,
+): Promise<MarcaDoEstabelecimento | null> {
+  const [linha] = await tx
+    .select({
+      nome: estabelecimentos.nome,
+      corTema: estabelecimentos.corTema,
+      telefonePublico: estabelecimentos.telefonePublico,
+    })
+    .from(estabelecimentos)
+    .where(eq(estabelecimentos.id, estabelecimentoId))
+    .limit(1);
+
+  return linha ?? null;
 }

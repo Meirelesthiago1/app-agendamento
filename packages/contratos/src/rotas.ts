@@ -140,6 +140,42 @@ export const ROTAS = {
     resposta: usuarioDaSessao,
   },
 
+  convidar: {
+    metodo: 'POST',
+    caminho: '/equipe/convites',
+    publica: false,
+    corpo: z.object({
+      nome: z.string().min(2).max(120),
+      email: z.email(),
+      papel: z.enum(['PROPRIETARIO', 'ADMIN', 'FUNCIONARIO']),
+    }),
+    resposta: feito,
+  },
+
+  aceitarConvite: {
+    metodo: 'POST',
+    caminho: '/auth/convite',
+    publica: false,
+    corpo: z.object({ token: z.string().min(20), senha }),
+    resposta: usuarioDaSessao,
+  },
+
+  pedirRecuperacao: {
+    metodo: 'POST',
+    caminho: '/auth/recuperacao',
+    publica: false,
+    corpo: z.object({ email: z.email() }),
+    resposta: feito,
+  },
+
+  redefinirSenha: {
+    metodo: 'POST',
+    caminho: '/auth/nova-senha',
+    publica: false,
+    corpo: z.object({ token: z.string().min(20), senha }),
+    resposta: feito,
+  },
+
   catalogo: {
     metodo: 'GET',
     caminho: '/publico/:slug/catalogo',
