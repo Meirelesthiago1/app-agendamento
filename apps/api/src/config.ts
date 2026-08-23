@@ -6,6 +6,7 @@ const esquema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     LOG_NIVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+    PORTA: z.coerce.number().int().positive().default(3000),
 
     BANCO_URL: urlDePostgres,
     BANCO_URL_PUBLICO: urlDePostgres,
@@ -44,8 +45,8 @@ const esquema = z
       }
     };
 
-    // Segunda camada da restrição de 10.4: a primeira é a eliminação do módulo `LOG` do
-    // bundle de produção, e ela depende de o bundler continuar configurado certo.
+    // Segunda camada da restrição de 10.4: a primeira é a eliminação do módulo `LOG`
+    // do bundle de produção, e ela depende de o bundler continuar configurado certo.
     if (valores.NODE_ENV === 'production' && valores.OTP_CANAL === 'LOG') {
       contexto.addIssue({
         code: 'custom',
@@ -93,15 +94,42 @@ const esquema = z
 
 export type Config = z.infer<typeof esquema>;
 
-const resultado = esquema.safeParse(process.env);
+export class ErroDeConfiguracao extends Error {
+  readonly problemas: string[];
 
-if (!resultado.success) {
-  const problemas = resultado.error.issues
-    .map((problema) => `  ${problema.path.join('.') || '(raiz)'}: ${problema.message}`)
-    .join('\n');
-
-  process.stderr.write(`Configuracao invalida. Corrija o ambiente:\n${problemas}\n`);
-  process.exit(1);
+  constructor(problemas: string[]) {
+    super(`Configuracao invalida:\n${problemas.join('\n')}`);
+    this.name = 'ErroDeConfiguracao';
+    this.problemas = problemas;
+  }
 }
 
-export const config: Config = resultado.data;
+/** Puro: recebe a fonte e devolve ou lança. É o que torna o boot testável. */
+export function lerConfig(fonte: Record<string, string | undefined>): Config {
+  const resultado = esquema.safeParse(fonte);
+
+  if (!resultado.success) {
+    throw new ErroDeConfiguracao(
+      resultado.error.issues.map(
+        (problema) => `  ${problema.path.join('.') || '(raiz)'}: ${problema.message}`,
+      ),
+    );
+  }
+
+  return resultado.data;
+}
+
+/**
+ * Falhar no start é melhor que falhar no primeiro cliente: variável ausente
+ * impede o processo de subir, em vez de produzir falha silenciosa em produção.
+ */
+export function carregarConfig(): Config {
+  try {
+    return lerConfig(process.env);
+  } catch (erro) {
+    process.stderr.write(
+      erro instanceof ErroDeConfiguracao ? `${erro.message}\n` : `${String(erro)}\n`,
+    );
+    process.exit(1);
+  }
+}

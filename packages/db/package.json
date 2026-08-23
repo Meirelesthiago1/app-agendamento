@@ -13,7 +13,8 @@
     "./semente": {
       "types": "./dist/semente.d.ts",
       "default": "./dist/semente.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"

@@ -5,8 +5,8 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: etapas 0, 1 e 2 concluídas e verificadas no CI. A etapa 3
-(contratos e casca da API) é o próximo passo.** O detalhe está em "Onde a
+**Estado: etapas 0 a 3 concluídas. A etapa 4 (sistema de design: fundação) é o
+próximo passo.** O detalhe está em "Onde a
 implementação está", no fim deste arquivo.
 
 ---
@@ -124,8 +124,9 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | Etapa | Branch | O que ficou de pé |
 |---|---|---|
 | 0 — Fundação | `main` | Monorepo, Docker Compose, CI, as três regras executáveis |
-| 1 — Banco | `etapa-1-banco` | 19 tabelas, RLS, dois papéis, `EXCLUDE`, semente, os dois testes de 10.1 |
-| 2 — Domínio | `etapa-1-banco` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
+| 1 — Banco | `main` | 19 tabelas, RLS, dois papéis, `EXCLUDE`, semente, os dois testes de 10.1 |
+| 2 — Domínio | `main` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
+| 3 — API | `etapa-3-api` | `contratos` com `ROTAS` e cliente próprio, Fastify com os quatro plugins, `unidadeDeTrabalho`, as cinco portas locais, e quatro rotas reais |
 
 Levantar o ambiente do zero:
 
@@ -136,6 +137,16 @@ pnpm --filter @agendamento/db exec drizzle-kit migrate
 pnpm --filter @agendamento/db semear                 # dois estabelecimentos
 pnpm verificar                                       # lint, tipos, regras, build, testes
 ```
+
+As migrações criam os papéis sem senha. Para rodar a API local, defina uma vez:
+
+```sql
+ALTER ROLE agendamento_gestor  WITH PASSWORD 'agendamento';
+ALTER ROLE agendamento_publico WITH PASSWORD 'agendamento';
+```
+
+e aponte `BANCO_URL` e `BANCO_URL_PUBLICO` para esses papéis — não para o dono do
+banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/servidor.ts`.
 
 `DIRETO_BANCO_URL` precisa estar no ambiente ou em `.env` — ver `.env.exemplo`.
 
@@ -171,6 +182,16 @@ pnpm verificar                                       # lint, tipos, regras, buil
 - `SLUGS_RESERVADOS` foi fechada em `packages/contratos/src/comuns.ts`, junto do
   formato do slug. Fecha cedo a lacuna que venceria na etapa 7/8; a lista é
   editável.
+- `apps/api` usa `rewriteRelativeImportExtensions`: imports relativos com sufixo
+  `.ts`, que o `tsc` reescreve para `.js` no emit. É o que permite ao Node rodar
+  o fonte direto em desenvolvimento. Os pacotes seguem com `.js`, porque são
+  consumidos pelo `dist/`.
+- Encaixe **ocupa** para efeito de disponibilidade. A constraint de exclusão o
+  dispensa porque é sobreposição autorizada (5.4), mas o tempo do profissional
+  continua tomado, e oferecer o horário de novo geraria um segundo encaixe
+  involuntário.
+- Limites de taxa provisórios: 60/min em `slots` e 30/min em `dias-com-vaga`. A
+  etapa 11 calibra os números; o mecanismo já está de pé.
 
 ## Decisões ainda abertas
 

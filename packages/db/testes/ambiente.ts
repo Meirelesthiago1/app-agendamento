@@ -1,14 +1,11 @@
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
+import { CAMINHO_DAS_MIGRACOES } from '../src/migracoes.js';
 import { semear } from '../src/semente.js';
 
 const SENHA_DOS_PAPEIS = 'teste';
-
-const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export type Ambiente = {
   urlGestor: string;
@@ -29,7 +26,7 @@ export async function subirBanco(): Promise<Ambiente> {
   const conexaoDono = new Pool({ connectionString: container.getConnectionUri() });
   const dono = drizzle(conexaoDono);
 
-  await migrate(dono, { migrationsFolder: resolve(RAIZ, 'migracoes') });
+  await migrate(dono, { migrationsFolder: CAMINHO_DAS_MIGRACOES });
 
   // As migrações criam os papéis com LOGIN e sem senha; a senha é de ambiente.
   await conexaoDono.query(`ALTER ROLE agendamento_gestor WITH PASSWORD '${SENHA_DOS_PAPEIS}'`);

@@ -1,1 +1,1 @@
-export * from './pools.js';
+export * from './pools.ts';
