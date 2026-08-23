@@ -218,6 +218,14 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
 - A Inter mora em `packages/ui/src/tokens/fontes/`, com as faces declaradas à
   mão para `latin` e `latin-ext`. O `url()` com especificador de pacote não
   resolve no build do Vite.
+- **`apps/api` pode importar `@agendamento/ui/paleta`** — emenda a 4.2. Cliente de
+  e-mail não suporta custom property, então template precisa dos valores de cor
+  embutidos; sem a aresta, a paleta seria copiada para dentro da API, que é o que
+  D14 impede. O ponto de entrada `paleta` é só matemática de cor, sem React nem
+  DOM: a API não arrasta a biblioteca de componentes.
+- O `dev` da API usa `node --import tsx`. O Node executa `.ts` nativamente mas
+  **não** `.tsx` — ele remove tipos, não transforma JSX, e os templates de e-mail
+  são JSX. O build por `tsc` segue igual.
 
 ## Decisões ainda abertas
 

@@ -12,7 +12,19 @@ const PERMITIDO: Record<string, readonly string[]> = {
   'packages/contratos': ['@agendamento/dominio'],
   'packages/db': ['@agendamento/dominio'],
   'packages/ui': [],
-  'apps/api': ['@agendamento/dominio', '@agendamento/contratos', '@agendamento/db'],
+  /**
+   * `ui` entra aqui como emenda a 4.2, e a razão é dura: cliente de e-mail não
+   * suporta custom property, então template precisa dos valores de cor
+   * **embutidos** no HTML. Sem esta aresta, a paleta seria copiada para dentro
+   * da API — que é exatamente o que D14 existe para impedir. A API usa de `ui`
+   * apenas os tokens e `derivarPaleta`, nunca componente.
+   */
+  'apps/api': [
+    '@agendamento/dominio',
+    '@agendamento/contratos',
+    '@agendamento/db',
+    '@agendamento/ui',
+  ],
   'apps/painel': ['@agendamento/dominio', '@agendamento/contratos', '@agendamento/ui'],
   'apps/publico': ['@agendamento/dominio', '@agendamento/contratos', '@agendamento/ui'],
   'apps/playground': ['@agendamento/ui'],

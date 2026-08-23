@@ -4,6 +4,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "types": ["node"],
+    // Templates de e-mail em React Email (2.3 do stack)
+    "jsx": "react-jsx",
     "noEmit": true,
     // Node roda o fonte direto em desenvolvimento; o tsc reescreve para .js no emit
     "allowImportingTsExtensions": true,

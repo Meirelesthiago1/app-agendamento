@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./tokens/*": "./src/tokens/*",
     "./marca": "./src/marca/index.ts",
-    "./icones": "./src/icones/index.ts"
+    "./icones": "./src/icones/index.ts",
+    "./paleta": "./src/paleta.ts"
   },
   "scripts": {
     "tipos": "tsc -p tsconfig.json",
