@@ -5,8 +5,8 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: etapas 0 a 5 concluídas. A etapa 6 (casca do painel) é o próximo
-passo.** O detalhe está em "Onde a
+**Estado: etapas 0 a 6 concluídas. A etapa 7 (configuração, catálogo, equipe e
+horários) é o próximo passo.** O detalhe está em "Onde a
 implementação está", no fim deste arquivo.
 
 ---
@@ -128,7 +128,8 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | 2 — Domínio | `main` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
 | 3 — API | `main` | `contratos` com `ROTAS` e cliente próprio, Fastify com os quatro plugins, `unidadeDeTrabalho`, as cinco portas locais, e quatro rotas reais |
 | 4 — Design | `main` | Tokens em três camadas, `derivarPaleta` em OKLCH, os 18 componentes do lote de fundação, e o playground com `/tokens`, `/primitivos` e `/marca` |
-| 5 — Autenticação | `etapa-5-auth` | argon2id, sessão opaca de 30 dias, os três transacionais em React Email, cadastro, convite de equipe e recuperação de senha |
+| 5 — Autenticação | `main` | argon2id, sessão opaca de 30 dias, os três transacionais em React Email, cadastro, convite de equipe e recuperação de senha |
+| 6 — Painel | `etapa-6-painel` | Vite + TanStack Router/Query, guarda de rota, layout nas duas larguras, seletor de estabelecimento, `ControlePermissao` e estado de tabela na URL |
 
 Levantar o ambiente do zero:
 
@@ -236,6 +237,13 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
 - Teste de autenticação precisa injetar `limitador` permissivo: o limite real de
   cinco cadastros por minuto barra o próprio arquivo de teste. Quem verifica o
   limitador é `caminho-completo.teste.ts`.
+- O painel fala com a API por proxy do Vite em `/api`: origens diferentes
+  impediriam o cookie de sessão de viajar em desenvolvimento.
+- `chavesDe(estabelecimentoId)` é o **único** caminho para uma chave de cache
+  escopada, e já embute o id na raiz. Há teste percorrendo o que ela devolve.
+  Trocar de estabelecimento invalida, nunca `clear()` — `clear()` é do logout.
+- `src/rotaArvore.gen.ts` é gerado pelo plugin do TanStack Router: fora do Biome
+  e fora do git.
 - O `dev` da API usa `node --import tsx`. O Node executa `.ts` nativamente mas
   **não** `.tsx` — ele remove tipos, não transforma JSX, e os templates de e-mail
   são JSX. O build por `tsc` segue igual.

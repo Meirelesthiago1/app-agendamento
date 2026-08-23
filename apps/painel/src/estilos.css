@@ -1,0 +1,4 @@
+@import "@agendamento/ui/tokens/tailwind.css";
+@import "@agendamento/ui/tokens/fonte.css";
+
+@source "../../../packages/ui/src";
