@@ -59,6 +59,25 @@ export const slotDisponivel = z.object({
   profissionalIds: z.array(uuid),
 });
 
+export const usuarioDaSessao = z.object({
+  id: uuid,
+  nome: z.string(),
+  email: z.string(),
+  estabelecimentos: z.array(
+    z.object({
+      id: uuid,
+      papel: z.enum(['PROPRIETARIO', 'ADMIN', 'FUNCIONARIO']),
+    }),
+  ),
+  /** Nulo quando há mais de um e o cliente ainda não escolheu. */
+  estabelecimentoAtual: uuid.nullable(),
+});
+
+/** Mínimo de oito caracteres, sem regra de composição: comprimento vale mais. */
+export const senha = z.string().min(8).max(200);
+
+const feito = z.object({ ok: z.boolean() });
+
 export const ROTAS = {
   saude: {
     metodo: 'GET',
@@ -68,6 +87,57 @@ export const ROTAS = {
       ok: z.boolean(),
       banco: z.boolean(),
     }),
+  },
+
+  cadastrar: {
+    metodo: 'POST',
+    caminho: '/auth/cadastro',
+    publica: false,
+    corpo: z.object({
+      nome: z.string().min(2).max(120),
+      email: z.email(),
+      senha,
+    }),
+    // A mesma resposta exista a conta ou não (1.1 do conteúdo)
+    resposta: feito,
+  },
+
+  verificarEmail: {
+    metodo: 'POST',
+    caminho: '/auth/verificar-email',
+    publica: false,
+    corpo: z.object({ token: z.string().min(20) }),
+    resposta: feito,
+  },
+
+  reenviarVerificacao: {
+    metodo: 'POST',
+    caminho: '/auth/reenviar-verificacao',
+    publica: false,
+    corpo: z.object({ email: z.email() }),
+    resposta: feito,
+  },
+
+  entrar: {
+    metodo: 'POST',
+    caminho: '/auth/entrada',
+    publica: false,
+    corpo: z.object({ email: z.email(), senha }),
+    resposta: usuarioDaSessao,
+  },
+
+  sair: {
+    metodo: 'POST',
+    caminho: '/auth/saida',
+    publica: false,
+    resposta: feito,
+  },
+
+  eu: {
+    metodo: 'GET',
+    caminho: '/auth/eu',
+    publica: false,
+    resposta: usuarioDaSessao,
   },
 
   catalogo: {
@@ -146,3 +216,4 @@ export type SaidaDe<R extends DefinicaoDeRota> = z.infer<R['resposta']>;
 export type Catalogo = SaidaDe<Rotas['catalogo']>;
 export type Slots = SaidaDe<Rotas['slots']>;
 export type DiasComVaga = SaidaDe<Rotas['diasComVaga']>;
+export type UsuarioDaSessao = SaidaDe<Rotas['eu']>;

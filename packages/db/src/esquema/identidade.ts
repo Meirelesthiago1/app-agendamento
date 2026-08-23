@@ -10,7 +10,13 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { canalVerificacao, papel, provedorExterno, statusVinculo } from './enums.js';
+import {
+  canalVerificacao,
+  finalidadeVerificacao,
+  papel,
+  provedorExterno,
+  statusVinculo,
+} from './enums.js';
 import { estabelecimentos } from './estabelecimentos.js';
 import { politicaDeTenant, politicaDosProprios } from './rls.js';
 import { atualizadoEm, citext, criadoEm, idPrimario } from './tipos.js';
@@ -65,6 +71,9 @@ export const codigosVerificacao = pgTable(
     id: idPrimario(),
     destino: varchar('destino', { length: 160 }).notNull(),
     canal: canalVerificacao('canal').notNull(),
+    finalidade: finalidadeVerificacao('finalidade').notNull(),
+    /** `usuario_id` ou `vinculo_id`, conforme a finalidade. */
+    referenciaId: uuid('referencia_id'),
     codigoHash: text('codigo_hash').notNull(),
     tentativas: integer('tentativas').notNull().default(0),
     expiraEm: timestamp('expira_em', { withTimezone: true }).notNull(),
@@ -72,7 +81,11 @@ export const codigosVerificacao = pgTable(
     ip: inet('ip'),
     criadoEm: criadoEm(),
   },
-  (tabela) => [index('codigos_verificacao_destino_idx').on(tabela.destino, tabela.expiraEm)],
+  (tabela) => [
+    index('codigos_verificacao_destino_idx').on(tabela.destino, tabela.expiraEm),
+    // O OTP é buscado por destino; o link mágico, pelo próprio hash
+    index('codigos_verificacao_hash_idx').on(tabela.codigoHash),
+  ],
 );
 
 export const sessoes = pgTable(

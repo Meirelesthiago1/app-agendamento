@@ -13,6 +13,18 @@ export const provedorExterno = pgEnum('provedor_externo', ['GOOGLE']);
 
 export const canalVerificacao = pgEnum('canal_verificacao', ['SMS', 'WHATSAPP', 'EMAIL']);
 
+/**
+ * Sem isto, um token emitido para verificar e-mail poderia ser reapresentado
+ * como redefinição de senha: o hash é o mesmo, e nada no registro diria que ele
+ * não serve para aquilo.
+ */
+export const finalidadeVerificacao = pgEnum('finalidade_verificacao', [
+  'OTP_TELEFONE',
+  'VERIFICACAO_EMAIL',
+  'RECUPERACAO_SENHA',
+  'CONVITE_EQUIPE',
+]);
+
 export const papel = pgEnum('papel', ['PROPRIETARIO', 'ADMIN', 'FUNCIONARIO']);
 
 export const statusVinculo = pgEnum('status_vinculo', ['CONVIDADO', 'ATIVO', 'DESATIVADO']);
