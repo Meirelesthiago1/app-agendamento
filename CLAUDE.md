@@ -192,6 +192,17 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
   involuntário.
 - Limites de taxa provisórios: 60/min em `slots` e 30/min em `dias-com-vaga`. A
   etapa 11 calibra os números; o mecanismo já está de pé.
+- **Nada de `Promise.all` sobre a mesma transação.** A transação vive numa
+  conexão só, que executa uma consulta por vez: o `Promise.all` não paraleliza,
+  enfileira, e o `pg` avisa que vai deixar de aceitar isso na versão 9. Dentro de
+  `unidadeDeTrabalho`, consultas em série.
+- Um repositório por módulo, dono das consultas do seu domínio. Atravessar
+  módulos é trabalho do caso de uso, que é quem orquestra (6.2) — `disponibilidade`
+  compõe `estabelecimentos`, `servicos`, `profissionais`, `horarios` e
+  `agendamentos`.
+- O plugin de contexto entrega o estabelecimento **inteiro**, não só o id. Há
+  teste contando as resoluções por requisição, porque a busca duplicada não
+  aparece em teste de comportamento.
 
 ## Decisões ainda abertas
 

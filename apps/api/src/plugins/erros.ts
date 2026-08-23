@@ -1,4 +1,4 @@
-import { type CodigoErro, ErroDominio, eErroDominio } from '@agendamento/dominio';
+import { type CodigoErro, eErroDominio } from '@agendamento/dominio';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import {
@@ -134,9 +134,3 @@ export const pluginDeErros = fp(async (app: FastifyInstance) => {
     responder(reply, 404, 'NAO_ENCONTRADO', 'Endereço não encontrado.'),
   );
 });
-
-export function statusDe(codigo: CodigoErro): number {
-  return STATUS[codigo];
-}
-
-export { ErroDominio };

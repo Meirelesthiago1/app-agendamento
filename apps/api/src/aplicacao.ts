@@ -1,13 +1,15 @@
 import { ErroDominio, type LimitadorTaxa } from '@agendamento/dominio';
 import { sql } from 'drizzle-orm';
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import type { Config } from './config.ts';
+import type { Contexto } from './contexto.ts';
 import type { Pools } from './infra/db/pools.ts';
 import { criarLimitadorEmMemoria } from './infra/limite/memoria.ts';
 import { criarPortas, type Portas } from './infra/portas.ts';
 import * as disponibilidade from './modulos/disponibilidade/casos-de-uso.ts';
-import { buscarTenantPorSlug } from './modulos/disponibilidade/repositorio.ts';
+import { obterCatalogoPublico } from './modulos/estabelecimentos/casos-de-uso.ts';
+import { buscarPorSlug, type Estabelecimento } from './modulos/estabelecimentos/repositorio.ts';
 import { pluginDeAutenticacao } from './plugins/autenticacao.ts';
 import { pluginDeContexto } from './plugins/contexto.ts';
 import { pluginDeErros } from './plugins/erros.ts';
@@ -18,6 +20,8 @@ export type Dependencias = {
   config: Config;
   pools: Pools;
   limitador?: LimitadorTaxa;
+  /** Injetável para que o teste conte quantas vezes o tenant é resolvido. */
+  buscarPorSlug?: typeof buscarPorSlug;
 };
 
 export type Aplicacao = FastifyInstance & { portas: Portas };
@@ -32,11 +36,24 @@ const LIMITES = {
   '/publico/:slug/dias-com-vaga': { requisicoes: 30, janelaSegundos: 60 },
 } as const;
 
+/** O tenant já foi resolvido pelo plugin de contexto; aqui só se confere. */
+function exigirTenant(requisicao: FastifyRequest): {
+  contexto: Contexto;
+  estabelecimento: Estabelecimento;
+} {
+  const { contexto, estabelecimento } = requisicao.resolvido();
+
+  if (estabelecimento === null) {
+    throw new ErroDominio('NAO_ENCONTRADO', 'Estabelecimento não encontrado.');
+  }
+
+  return { contexto, estabelecimento };
+}
+
 export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
   const app = Fastify({
     logger: {
       level: deps.config.LOG_NIVEL,
-      // Correlação por requisição vive no log, nunca transportando tenant (T13)
       redact: ['req.headers.cookie', 'req.headers.authorization'],
     },
   });
@@ -56,7 +73,7 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
   });
   await app.register(pluginDeContexto, {
     pools: deps.pools,
-    resolverTenant: async (slug, pool) => (await buscarTenantPorSlug(pool, slug))?.id ?? null,
+    buscarPorSlug: deps.buscarPorSlug ?? buscarPorSlug,
   });
 
   registrarRota(app, 'saude', async () => {
@@ -65,55 +82,38 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
     return { ok: true, banco: true };
   });
 
-  registrarRota(app, 'catalogo', async ({ params, requisicao }) => {
-    const contexto = requisicao.contexto();
-    const tenant = await buscarTenantPorSlug(contexto.pool, params.slug);
+  registrarRota(app, 'catalogo', async ({ requisicao }) => {
+    const { contexto, estabelecimento } = exigirTenant(requisicao);
 
-    if (tenant === null) {
-      throw new ErroDominio('NAO_ENCONTRADO', 'Estabelecimento não encontrado.');
-    }
-
-    return disponibilidade.obterCatalogo(contexto, tenant);
+    return obterCatalogoPublico(contexto, estabelecimento);
   });
 
-  registrarRota(app, 'slots', async ({ params, query, requisicao, reply }) => {
-    const contexto = requisicao.contexto();
-    const tenant = await buscarTenantPorSlug(contexto.pool, params.slug);
-
-    if (tenant === null) {
-      throw new ErroDominio('NAO_ENCONTRADO', 'Estabelecimento não encontrado.');
-    }
+  registrarRota(app, 'slots', async ({ query, requisicao, reply }) => {
+    const { contexto, estabelecimento } = exigirTenant(requisicao);
 
     // T15 — disponibilidade nunca é cacheada: em cache, leva a agendamento
     // sobre horário ocupado
     reply.header('cache-control', 'no-store');
 
-    return disponibilidade.obterSlots(contexto, tenant.fusoHorario, {
+    return disponibilidade.obterSlots(contexto, estabelecimento.fusoHorario, {
       data: query.data,
       servicoIds: query.servicos,
       profissionalId: query.profissionalId,
     });
   });
 
-  registrarRota(app, 'diasComVaga', async ({ params, query, requisicao, reply }) => {
-    const contexto = requisicao.contexto();
-    const tenant = await buscarTenantPorSlug(contexto.pool, params.slug);
-
-    if (tenant === null) {
-      throw new ErroDominio('NAO_ENCONTRADO', 'Estabelecimento não encontrado.');
-    }
+  registrarRota(app, 'diasComVaga', async ({ query, requisicao, reply }) => {
+    const { contexto, estabelecimento } = exigirTenant(requisicao);
 
     reply.header('cache-control', 'no-store');
 
-    return disponibilidade.obterDiasComVaga(contexto, tenant.fusoHorario, {
+    return disponibilidade.obterDiasComVaga(contexto, estabelecimento.fusoHorario, {
       mes: query.mes,
       servicoIds: query.servicos,
       profissionalId: query.profissionalId,
     });
   });
 
-  // As portas viajam na instância para que caso de uso e tarefa do worker as
-  // recebam do mesmo lugar.
   const comPortas = app as unknown as Aplicacao;
 
   comPortas.portas = portas;

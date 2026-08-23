@@ -4,10 +4,11 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { type Aplicacao, criarAplicacao } from '../src/aplicacao.ts';
 import { lerConfig } from '../src/config.ts';
 import { criarPools, type Pools } from '../src/infra/db/pools.ts';
+import { buscarPorSlug } from '../src/modulos/estabelecimentos/repositorio.ts';
 
 const TEMPO_DE_CONTAINER = 180_000;
 const SENHA = 'teste';
@@ -17,6 +18,7 @@ let app: Aplicacao;
 let pools: Pools;
 let servicoId: string;
 let profissionalId: string;
+let buscasDeTenant = 0;
 
 function ambiente(gestor: string, publico: string) {
   return {
@@ -68,7 +70,14 @@ beforeAll(async () => {
   const config = lerConfig(ambiente(como('agendamento_gestor'), como('agendamento_publico')));
 
   pools = criarPools(config);
-  app = await criarAplicacao({ config, pools });
+  app = await criarAplicacao({
+    config,
+    pools,
+    buscarPorSlug: async (executor, slug) => {
+      buscasDeTenant += 1;
+      return buscarPorSlug(executor, slug);
+    },
+  });
 
   await app.ready();
 }, TEMPO_DE_CONTAINER);
@@ -78,6 +87,10 @@ afterAll(async () => {
   await pools?.encerrar();
   await container?.stop();
 }, TEMPO_DE_CONTAINER);
+
+beforeEach(() => {
+  buscasDeTenant = 0;
+});
 
 /**
  * O critério de pronto da etapa 3: uma rota real atravessa o caminho de 6.3 do
@@ -120,6 +133,21 @@ describe('o caminho de 6.3, ponta a ponta', () => {
     expect(corpo.slots[0].profissionalIds).toEqual([profissionalId]);
     // T15 — disponibilidade nunca é cacheada
     expect(resposta.headers['cache-control']).toBe('no-store');
+  });
+
+  test('o tenant é resolvido uma vez por requisição, não duas', async () => {
+    await app.inject({ method: 'GET', url: '/publico/corte-fino/catalogo' });
+
+    expect(buscasDeTenant).toBe(1);
+
+    buscasDeTenant = 0;
+
+    await app.inject({
+      method: 'GET',
+      url: `/publico/corte-fino/slots?data=${proximaTerca()}&servicos=${servicoId}`,
+    });
+
+    expect(buscasDeTenant).toBe(1);
   });
 
   test('dias com vaga responde para o mês', async () => {
@@ -170,6 +198,21 @@ describe('ErroDominio traduzido em HTTP', () => {
 
     expect(erro.codigo).toBe('DADOS_INVALIDOS');
     expect(erro.campos.data).toEqual(['use o formato AAAA-MM-DD']);
+  });
+
+  test('serviço repetido diz o que é, em vez de dizer que não existe', async () => {
+    const resposta = await app.inject({
+      method: 'GET',
+      url: `/publico/corte-fino/slots?data=${proximaTerca()}&servicos=${servicoId},${servicoId}`,
+    });
+
+    expect(resposta.statusCode).toBe(422);
+
+    const { erro } = resposta.json();
+
+    expect(erro.codigo).toBe('DADOS_INVALIDOS');
+    expect(erro.mensagem).toMatch(/uma vez/);
+    expect(erro.campos.servicos).toEqual(['serviço repetido']);
   });
 
   test('mais de cinco serviços é recusado pelo contrato', async () => {

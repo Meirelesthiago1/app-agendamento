@@ -13,7 +13,11 @@ import {
 import { DateTime } from 'luxon';
 import type { Contexto } from '../../contexto.ts';
 import { type Transacao, unidadeDeTrabalho } from '../../infra/db/pools.ts';
-import * as repositorio from './repositorio.ts';
+import * as repoAgendamentos from '../agendamentos/repositorio.ts';
+import * as repoEstabelecimentos from '../estabelecimentos/repositorio.ts';
+import * as repoHorarios from '../horarios/repositorio.ts';
+import * as repoProfissionais from '../profissionais/repositorio.ts';
+import * as repoServicos from '../servicos/repositorio.ts';
 
 export type PedidoDeSlots = {
   data: DataLocal;
@@ -33,9 +37,20 @@ type Carregado = {
   profissionais: Profissional[];
 };
 
+function exigirServicosDistintos(servicoIds: readonly string[]): void {
+  if (new Set(servicoIds).size !== servicoIds.length) {
+    throw new ErroDominio('DADOS_INVALIDOS', 'Cada serviço só pode aparecer uma vez.', {
+      servicos: ['serviço repetido'],
+    });
+  }
+}
+
 /**
  * A parte que busca. A que decide vive em `packages/dominio` e roda igual no
  * browser (5.2 do stack) — misturar as duas é como o motor acaba duplicado.
+ *
+ * Cada repositório é dono das consultas do seu domínio; atravessar módulos é
+ * trabalho do caso de uso, que é quem orquestra (6.2).
  */
 async function carregar(
   tx: Transacao,
@@ -47,13 +62,14 @@ async function carregar(
   ate: DataLocal,
   agora: DateTime,
 ): Promise<Carregado> {
-  const config = await repositorio.buscarConfiguracao(tx, contexto.estabelecimentoId);
+  exigirServicosDistintos(servicoIds);
+
+  const config = await repoEstabelecimentos.buscarConfiguracao(tx, contexto.estabelecimentoId);
+  const servicos = await repoServicos.listar(tx, contexto.estabelecimentoId, servicoIds);
 
   if (config === null) {
     throw new ErroDominio('NAO_ENCONTRADO', 'Estabelecimento sem configuração.');
   }
-
-  const servicos = await repositorio.listarServicos(tx, contexto.estabelecimentoId, servicoIds);
 
   if (servicos.length !== servicoIds.length) {
     throw new ErroDominio('NAO_ENCONTRADO', 'Um dos serviços não existe ou não está ativo.');
@@ -66,10 +82,12 @@ async function carregar(
     );
   }
 
+  const porId = new Map(servicos.map((servico) => [servico.id, servico]));
+
   // A ordem do pedido é a ordem do bloco: `folga_antes` do primeiro e
   // `folga_depois` do último (6.2)
   const itens: ItemPedido[] = servicoIds.map((id) => {
-    const servico = servicos.find((s) => s.id === id);
+    const servico = porId.get(id);
 
     if (servico === undefined) {
       throw new ErroDominio('NAO_ENCONTRADO', 'Um dos serviços não existe ou não está ativo.');
@@ -83,7 +101,7 @@ async function carregar(
     };
   });
 
-  const equipe = await repositorio.listarProfissionaisComServicos(tx, contexto.estabelecimentoId);
+  const equipe = await repoProfissionais.listarComServicos(tx, contexto.estabelecimentoId);
   const candidatos =
     profissionalId === undefined ? equipe : equipe.filter((p) => p.id === profissionalId);
   const elegiveis = profissionaisElegiveis(candidatos, itens);
@@ -95,8 +113,24 @@ async function carregar(
     );
   }
 
+  const ids = elegiveis.map((profissional) => profissional.id);
   const inicioDaFaixa = emUtc(de, '00:00', fusoHorario).toJSDate();
   const fimDaFaixa = emUtc(somarDias(ate, 1), '00:00', fusoHorario).toJSDate();
+
+  const grade = await repoHorarios.listarGrade(tx, contexto.estabelecimentoId, ids);
+  const excecoes = await repoHorarios.listarExcecoes(
+    tx,
+    contexto.estabelecimentoId,
+    inicioDaFaixa,
+    fimDaFaixa,
+  );
+  const ocupacoes = await repoAgendamentos.listarOcupacoes(
+    tx,
+    contexto.estabelecimentoId,
+    ids,
+    inicioDaFaixa,
+    fimDaFaixa,
+  );
 
   return {
     itens,
@@ -111,19 +145,9 @@ async function carregar(
         janelaAgendamentoDias: config.janelaAgendamentoDias,
         folgaPodeExcederJanela: config.folgaPodeExcederJanela,
       },
-      grade: await repositorio.listarGrade(tx, contexto.estabelecimentoId),
-      excecoes: await repositorio.listarExcecoes(
-        tx,
-        contexto.estabelecimentoId,
-        inicioDaFaixa,
-        fimDaFaixa,
-      ),
-      ocupacoes: await repositorio.listarOcupacoes(
-        tx,
-        contexto.estabelecimentoId,
-        inicioDaFaixa,
-        fimDaFaixa,
-      ),
+      grade,
+      excecoes,
+      ocupacoes,
     },
   };
 }
@@ -194,44 +218,6 @@ export async function obterDiasComVaga(
         primeiroDia,
         ultimoDia,
       ),
-    };
-  });
-}
-
-export async function obterCatalogo(contexto: Contexto, tenant: repositorio.TenantResolvido) {
-  return unidadeDeTrabalho(contexto, async (tx) => {
-    const config = await repositorio.buscarConfiguracao(tx, contexto.estabelecimentoId);
-
-    if (config === null) {
-      throw new ErroDominio('NAO_ENCONTRADO', 'Estabelecimento sem configuração.');
-    }
-
-    const [servicos, equipe] = [
-      await repositorio.listarServicos(tx, contexto.estabelecimentoId),
-      await repositorio.listarProfissionaisComServicos(tx, contexto.estabelecimentoId),
-    ];
-
-    return {
-      estabelecimento: {
-        id: tenant.id,
-        slug: tenant.slug,
-        nome: tenant.nome,
-        fusoHorario: tenant.fusoHorario,
-        logoUrl: tenant.logoUrl,
-        corTema: tenant.corTema,
-        telefonePublico: tenant.telefonePublico,
-        enderecoPublico: tenant.enderecoPublico,
-        permiteMultiplosServicos: config.permiteMultiplosServicos,
-        janelaAgendamentoDias: config.janelaAgendamentoDias,
-      },
-      servicos,
-      profissionais: equipe.map((pessoa) => ({
-        id: pessoa.id,
-        nomeExibicao: pessoa.nomeExibicao,
-        bio: pessoa.bio,
-        avatarUrl: pessoa.avatarUrl,
-        servicoIds: pessoa.servicos.map((s) => s.servicoId),
-      })),
     };
   });
 }

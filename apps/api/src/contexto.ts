@@ -18,15 +18,3 @@ export type Contexto = {
   /** Escolhido pela rota: `/publico/*` usa `poolPublico` (6.8). */
   pool: Executor;
 };
-
-export function contextoDoSistema(estabelecimentoId: string, pool: Executor): Contexto {
-  return {
-    estabelecimentoId,
-    usuarioId: null,
-    clienteId: null,
-    papel: null,
-    profissionalId: null,
-    origem: 'SISTEMA',
-    pool,
-  };
-}
