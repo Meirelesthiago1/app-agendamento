@@ -28,9 +28,31 @@ const LOTE_DE_FUNDACAO = [
 
 const MARCA = ['derivarPaleta', 'ProvedorMarca', 'SeletorCorMarca'] as const;
 
+/** O lote que a etapa 7 puxa, na seção 5 do plano de implementação. */
+const LOTE_DA_ETAPA_7 = [
+  'EntradaMascarada',
+  'EntradaMoeda',
+  'EntradaHora',
+  'Passo',
+  'SeletorCor',
+  'Abas',
+  'Acordeao',
+  'MenuSuspenso',
+  'Tabela',
+  'Paginacao',
+  'Confirmacao',
+  'ResumoDeValor',
+] as const;
+
 describe('inventário do lote de fundação', () => {
   test('os dezoito componentes são exportados', () => {
     for (const nome of LOTE_DE_FUNDACAO) {
+      expect(ui, `falta ${nome}`).toHaveProperty(nome);
+    }
+  });
+
+  test('os doze da etapa 7 também', () => {
+    for (const nome of LOTE_DA_ETAPA_7) {
       expect(ui, `falta ${nome}`).toHaveProperty(nome);
     }
   });
