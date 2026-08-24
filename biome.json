@@ -15,7 +15,8 @@
       "!**/pnpm-lock.yaml",
       "!**/next-env.d.ts",
       "!**/migracoes/meta",
-      "!**/tokens/primitivos.css"
+      "!**/tokens/primitivos.css",
+      "!**/rotaArvore.gen.ts"
     ]
   },
   "formatter": {
