@@ -14,6 +14,7 @@ import { Route as ProtegidoRouteImport } from './rotas/_protegido'
 import { Route as CadastroRouteImport } from './rotas/cadastro'
 import { Route as EntradaRouteImport } from './rotas/entrada'
 import { Route as ProtegidoAgendaRouteImport } from './rotas/_protegido/agenda'
+import { Route as ProtegidoCatalogoRouteImport } from './rotas/_protegido/catalogo'
 import { Route as ProtegidoConfiguracoesRouteImport } from './rotas/_protegido/configuracoes'
 
 const IndexRoute = IndexRouteImport.update({
@@ -40,6 +41,11 @@ const ProtegidoAgendaRoute = ProtegidoAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => ProtegidoRoute,
 } as any)
+const ProtegidoCatalogoRoute = ProtegidoCatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => ProtegidoRoute,
+} as any)
 const ProtegidoConfiguracoesRoute = ProtegidoConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/entrada': typeof EntradaRoute
   '/agenda': typeof ProtegidoAgendaRoute
+  '/catalogo': typeof ProtegidoCatalogoRoute
   '/configuracoes': typeof ProtegidoConfiguracoesRoute
 }
 export interface FileRoutesByTo {
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/entrada': typeof EntradaRoute
   '/agenda': typeof ProtegidoAgendaRoute
+  '/catalogo': typeof ProtegidoCatalogoRoute
   '/configuracoes': typeof ProtegidoConfiguracoesRoute
 }
 export interface FileRoutesById {
@@ -67,13 +75,16 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/entrada': typeof EntradaRoute
   '/_protegido/agenda': typeof ProtegidoAgendaRoute
+  '/_protegido/catalogo': typeof ProtegidoCatalogoRoute
   '/_protegido/configuracoes': typeof ProtegidoConfiguracoesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastro' | '/entrada' | '/agenda' | '/configuracoes'
+  fullPaths:
+    '/' | '/cadastro' | '/entrada' | '/agenda' | '/catalogo' | '/configuracoes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastro' | '/entrada' | '/agenda' | '/configuracoes'
+  to:
+    '/' | '/cadastro' | '/entrada' | '/agenda' | '/catalogo' | '/configuracoes'
   id:
     | '__root__'
     | '/'
@@ -81,6 +92,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/entrada'
     | '/_protegido/agenda'
+    | '/_protegido/catalogo'
     | '/_protegido/configuracoes'
   fileRoutesById: FileRoutesById
 }
@@ -128,6 +140,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtegidoAgendaRouteImport
       parentRoute: typeof ProtegidoRoute
     }
+    '/_protegido/catalogo': {
+      id: '/_protegido/catalogo'
+      path: '/catalogo'
+      fullPath: '/catalogo'
+      preLoaderRoute: typeof ProtegidoCatalogoRouteImport
+      parentRoute: typeof ProtegidoRoute
+    }
     '/_protegido/configuracoes': {
       id: '/_protegido/configuracoes'
       path: '/configuracoes'
@@ -140,11 +159,13 @@ declare module '@tanstack/react-router' {
 
 interface ProtegidoRouteChildren {
   ProtegidoAgendaRoute: typeof ProtegidoAgendaRoute
+  ProtegidoCatalogoRoute: typeof ProtegidoCatalogoRoute
   ProtegidoConfiguracoesRoute: typeof ProtegidoConfiguracoesRoute
 }
 
 const ProtegidoRouteChildren: ProtegidoRouteChildren = {
   ProtegidoAgendaRoute: ProtegidoAgendaRoute,
+  ProtegidoCatalogoRoute: ProtegidoCatalogoRoute,
   ProtegidoConfiguracoesRoute: ProtegidoConfiguracoesRoute,
 }
 

@@ -1,6 +1,14 @@
 import { EXIBICOES_VALOR } from '@agendamento/dominio';
 import { z } from 'zod';
-import { corHex, dataLocal, fusoHorario, listaDeUuids, slug, uuid } from './comuns.js';
+import {
+  corHex,
+  dataLocal,
+  fusoHorario,
+  listaDeUuids,
+  slug,
+  slugDeServico,
+  uuid,
+} from './comuns.js';
 
 export type Metodo = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -117,6 +125,42 @@ export const politicasDoEstabelecimento = z.object({
 export const configuracaoCompleta = z.object({
   estabelecimento: dadosDoEstabelecimento.extend({ id: uuid }),
   politicas: politicasDoEstabelecimento,
+});
+
+export const categoria = z.object({
+  id: uuid,
+  nome: z.string().min(2).max(80),
+  posicao: z.number().int().nullable(),
+});
+
+export const dadosDaCategoria = categoria.omit({ id: true });
+
+/**
+ * O serviço como o painel o vê: inclui `ativo`, que o catálogo público nunca
+ * mostra — inativo sai da vitrine, mas continua existindo no histórico (6.3).
+ */
+export const servicoDoPainel = servicoPublico.extend({
+  ativo: z.boolean(),
+  posicao: z.number().int().nullable(),
+});
+
+export const dadosDoServico = z.object({
+  nome: z.string().min(2).max(120),
+  slug: slugDeServico,
+  descricao: z.string().max(2000).nullable(),
+  categoriaId: uuid.nullable(),
+  duracaoMin: z.number().int().min(5).max(600),
+  folgaAntesMin: z.number().int().min(0).max(240),
+  folgaDepoisMin: z.number().int().min(0).max(240),
+  valorCentavos: z.number().int().min(0).max(99_999_999).nullable(),
+  exibicaoValor: z.enum(EXIBICOES_VALOR),
+  cor: corHex.nullable(),
+  posicao: z.number().int().min(0).max(9999).nullable(),
+});
+
+export const catalogoDoPainel = z.object({
+  categorias: z.array(categoria),
+  servicos: z.array(servicoDoPainel),
 });
 
 export const ROTAS = {
@@ -240,6 +284,67 @@ export const ROTAS = {
     resposta: configuracaoCompleta,
   },
 
+  /** O catálogo como o gestor o edita: inclui inativos e as categorias vazias. */
+  listarCatalogo: {
+    metodo: 'GET',
+    caminho: '/catalogo',
+    publica: false,
+    resposta: catalogoDoPainel,
+  },
+
+  criarCategoria: {
+    metodo: 'POST',
+    caminho: '/catalogo/categorias',
+    publica: false,
+    corpo: dadosDaCategoria,
+    resposta: catalogoDoPainel,
+  },
+
+  atualizarCategoria: {
+    metodo: 'PATCH',
+    caminho: '/catalogo/categorias/:id',
+    publica: false,
+    params: z.object({ id: uuid }),
+    corpo: dadosDaCategoria,
+    resposta: catalogoDoPainel,
+  },
+
+  /** Os serviços da categoria ficam sem categoria, nunca são removidos junto. */
+  removerCategoria: {
+    metodo: 'DELETE',
+    caminho: '/catalogo/categorias/:id',
+    publica: false,
+    params: z.object({ id: uuid }),
+    resposta: catalogoDoPainel,
+  },
+
+  criarServico: {
+    metodo: 'POST',
+    caminho: '/catalogo/servicos',
+    publica: false,
+    corpo: dadosDoServico,
+    resposta: catalogoDoPainel,
+  },
+
+  atualizarServico: {
+    metodo: 'PATCH',
+    caminho: '/catalogo/servicos/:id',
+    publica: false,
+    params: z.object({ id: uuid }),
+    corpo: dadosDoServico,
+    resposta: catalogoDoPainel,
+  },
+
+  /** Desativar com agenda futura é bloqueado até resolver (6.3). */
+  definirServicoAtivo: {
+    metodo: 'PATCH',
+    caminho: '/catalogo/servicos/:id/ativo',
+    publica: false,
+    params: z.object({ id: uuid }),
+    corpo: z.object({ ativo: z.boolean() }),
+    resposta: catalogoDoPainel,
+  },
+
   catalogo: {
     metodo: 'GET',
     caminho: '/publico/:slug/catalogo',
@@ -320,3 +425,8 @@ export type UsuarioDaSessao = SaidaDe<Rotas['eu']>;
 export type ConfiguracaoCompleta = SaidaDe<Rotas['obterConfiguracao']>;
 export type DadosDoEstabelecimento = z.infer<typeof dadosDoEstabelecimento>;
 export type Politicas = z.infer<typeof politicasDoEstabelecimento>;
+export type CatalogoDoPainel = z.infer<typeof catalogoDoPainel>;
+export type Categoria = z.infer<typeof categoria>;
+export type DadosDaCategoria = z.infer<typeof dadosDaCategoria>;
+export type ServicoDoPainel = z.infer<typeof servicoDoPainel>;
+export type DadosDoServico = z.infer<typeof dadosDoServico>;

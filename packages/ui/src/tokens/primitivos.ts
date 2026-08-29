@@ -52,6 +52,29 @@ export const ESTADOS = {
   'vermelho-800': '#991B1B',
 } as const;
 
+/**
+ * Paleta de etiqueta: cores que quem usa a aplicação escolhe para marcar um
+ * item e reconhecê-lo de relance numa lista. São oito porque acima disso elas
+ * deixam de ser distinguíveis num ponto de dez pixels.
+ *
+ * São **dado**, não token: viajam como hex e são pintadas em tempo de execução,
+ * o que nenhuma classe faria. Moram aqui porque D14 dá a este arquivo a posse
+ * de todo valor cru de cor, inclusive o que a aplicação persiste.
+ *
+ * Ficam fora de `PRIMITIVOS` de propósito: não viram custom property nem classe
+ * do Tailwind, porque nada na interface é estilizado com elas.
+ */
+export const CORES_DE_ETIQUETA = [
+  { cor: '#EF4444', nome: 'Vermelho' },
+  { cor: '#F59E0B', nome: 'Âmbar' },
+  { cor: '#10B981', nome: 'Verde' },
+  { cor: '#06B6D4', nome: 'Ciano' },
+  { cor: '#3B82F6', nome: 'Azul' },
+  { cor: '#8B5CF6', nome: 'Violeta' },
+  { cor: '#EC4899', nome: 'Rosa' },
+  { cor: '#64748B', nome: 'Cinza' },
+] as const;
+
 export const PRIMITIVOS = { ...NEUTROS, ...MARCA, ...ESTADOS } as const;
 
 export type NomeDePrimitivo = keyof typeof PRIMITIVOS;

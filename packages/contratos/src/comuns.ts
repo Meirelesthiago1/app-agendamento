@@ -67,3 +67,28 @@ export const fusoHorario = z.enum(FUSOS_BRASIL);
 
 /** Hex de sete caracteres, o formato de `cor_tema` e `servicos.cor` (8.2, 8.4). */
 export const corHex = z.string().regex(/^#[0-9a-f]{6}$/, 'use o formato #rrggbb');
+
+/**
+ * Nome legível para slug. O gestor digita "Corte + Barba" e o deep link
+ * `?servico=` precisa de algo que sobreviva a uma URL. Continua editável: o
+ * derivado é sugestão, não imposição.
+ */
+export function paraSlug(texto: string): string {
+  return (
+    texto
+      .normalize('NFD')
+      // As marcas combinantes que o NFD separou da letra
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60)
+  );
+}
+
+/** Sem lista de reservados: `servicos.slug` vive sob o tenant, não no domínio. */
+export const slugDeServico = z
+  .string()
+  .min(2)
+  .max(60)
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'use apenas letras minúsculas, números e hífen');

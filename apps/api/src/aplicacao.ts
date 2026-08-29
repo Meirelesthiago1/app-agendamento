@@ -13,6 +13,7 @@ import * as disponibilidade from './modulos/disponibilidade/casos-de-uso.ts';
 import { obterCatalogoPublico } from './modulos/estabelecimentos/casos-de-uso.ts';
 import * as configuracao from './modulos/estabelecimentos/configuracao.ts';
 import { buscarPorSlug, type Estabelecimento } from './modulos/estabelecimentos/repositorio.ts';
+import * as catalogo from './modulos/servicos/casos-de-uso.ts';
 import { pluginDeAutenticacao } from './plugins/autenticacao.ts';
 import { pluginDeContexto } from './plugins/contexto.ts';
 import { pluginDeErros } from './plugins/erros.ts';
@@ -251,6 +252,34 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
 
   registrarRota(app, 'atualizarPoliticas', async ({ corpo, requisicao }) =>
     configuracao.atualizarPoliticas(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'listarCatalogo', async ({ requisicao }) =>
+    catalogo.listar(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'criarCategoria', async ({ corpo, requisicao }) =>
+    catalogo.criarCategoria(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarCategoria', async ({ params, corpo, requisicao }) =>
+    catalogo.atualizarCategoria(exigirSessaoComTenant(requisicao), params.id, corpo),
+  );
+
+  registrarRota(app, 'removerCategoria', async ({ params, requisicao }) =>
+    catalogo.removerCategoria(exigirSessaoComTenant(requisicao), params.id),
+  );
+
+  registrarRota(app, 'criarServico', async ({ corpo, requisicao }) =>
+    catalogo.criarServico(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarServico', async ({ params, corpo, requisicao }) =>
+    catalogo.atualizarServico(exigirSessaoComTenant(requisicao), params.id, corpo),
+  );
+
+  registrarRota(app, 'definirServicoAtivo', async ({ params, corpo, requisicao }) =>
+    catalogo.definirServicoAtivo(exigirSessaoComTenant(requisicao), params.id, corpo.ativo),
   );
 
   registrarRota(app, 'catalogo', async ({ requisicao }) => {

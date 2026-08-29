@@ -9,6 +9,7 @@ import {
   Campo,
   Cartao,
   Celula,
+  CORES_DE_ETIQUETA,
   Coluna,
   Confirmacao,
   ConteudoDoMenu,
@@ -46,16 +47,6 @@ function Secao({ titulo, nota, children }: { titulo: string; nota?: string; chil
   );
 }
 
-/** As cores do playground. Em produção, quem decide a paleta é o catálogo. */
-const CORES = [
-  { cor: '#ef4444', nome: 'Vermelho' },
-  { cor: '#f59e0b', nome: 'Ambar' },
-  { cor: '#10b981', nome: 'Verde' },
-  { cor: '#3b82f6', nome: 'Azul' },
-  { cor: '#8b5cf6', nome: 'Violeta' },
-  { cor: '#ec4899', nome: 'Rosa' },
-];
-
 const LINHAS = [
   { nome: 'Corte masculino', duracao: 30, valor: 4500 },
   { nome: 'Barba', duracao: 20, valor: 3000 },
@@ -70,7 +61,7 @@ export function Formularios() {
   const [fim, definirFim] = useState<number | null>(1080);
   const [granularidade, definirGranularidade] = useState(15);
   const [janela, definirJanela] = useState(14);
-  const [cor, definirCor] = useState<string | null>('#3b82f6');
+  const [cor, definirCor] = useState<string | null>(CORES_DE_ETIQUETA[4].cor);
   const [pagina, definirPagina] = useState(1);
   const [confirmando, definirConfirmando] = useState(false);
   const [automatica, definirAutomatica] = useState(true);
@@ -163,7 +154,7 @@ export function Formularios() {
         titulo="Seletor de cor"
         nota="Escolha entre opções: cor livre na agenda vira texto ilegível sobre ela."
       >
-        <SeletorCor value={cor} onChange={definirCor} opcoes={CORES} />
+        <SeletorCor value={cor} onChange={definirCor} opcoes={CORES_DE_ETIQUETA} />
         <p className="text-xs text-conteudo-tenue">Escolhida: {cor ?? 'nenhuma'}</p>
       </Secao>
 

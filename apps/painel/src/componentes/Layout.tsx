@@ -5,6 +5,7 @@ import {
   IconeCalendario,
   IconeCartao,
   IconeConfiguracoes,
+  IconeLoja,
   IconePessoa,
   IconePessoas,
 } from '@agendamento/ui';
@@ -21,6 +22,7 @@ type ItemDeNavegacao = {
 
 const NAVEGACAO: ItemDeNavegacao[] = [
   { para: '/agenda', rotulo: 'Agenda', icone: IconeCalendario },
+  { para: '/catalogo', rotulo: 'Catálogo', icone: IconeLoja },
   { para: '/clientes', rotulo: 'Clientes', icone: IconePessoa },
   { para: '/caixa', rotulo: 'Caixa', icone: IconeCartao },
   { para: '/equipe', rotulo: 'Equipe', icone: IconePessoas },
