@@ -10,7 +10,7 @@ import {
   uuid,
 } from './comuns.js';
 
-export type Metodo = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+export type Metodo = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
 export type DefinicaoDeRota = {
   metodo: Metodo;
@@ -163,6 +163,61 @@ export const catalogoDoPainel = z.object({
   servicos: z.array(servicoDoPainel),
 });
 
+/** As três combinações de 2.4 vivem na mesma tela, e é ela que as distingue. */
+export const membroDaEquipe = z.object({
+  id: uuid,
+  nomeExibicao: z.string(),
+  bio: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  ativo: z.boolean(),
+  posicao: z.number().int().nullable(),
+  /** Nulo é profissional sem login: cadastrado pelo gestor, não acessa nada. */
+  vinculoId: uuid.nullable(),
+  servicos: z.array(
+    z.object({
+      servicoId: uuid,
+      duracaoOverrideMin: z.number().int().min(5).max(600).nullable(),
+      valorOverrideCentavos: z.number().int().min(0).max(99_999_999).nullable(),
+    }),
+  ),
+});
+
+/** Quem tem acesso ao painel. Sem profissional é recepção ou financeiro (2.4). */
+export const acessoDaEquipe = z.object({
+  vinculoId: uuid,
+  nome: z.string(),
+  email: z.string(),
+  papel: z.enum(['PROPRIETARIO', 'ADMIN', 'FUNCIONARIO']),
+  status: z.enum(['CONVIDADO', 'ATIVO', 'DESATIVADO']),
+  profissionalId: uuid.nullable(),
+});
+
+export const equipeCompleta = z.object({
+  profissionais: z.array(membroDaEquipe),
+  acessos: z.array(acessoDaEquipe),
+});
+
+export const dadosDoProfissional = z.object({
+  nomeExibicao: z.string().min(2).max(120),
+  bio: z.string().max(2000).nullable(),
+  avatarUrl: z.url().max(500).nullable(),
+  posicao: z.number().int().min(0).max(9999).nullable(),
+  /** Liga o profissional a quem já tem acesso, ou o deixa sem login. */
+  vinculoId: uuid.nullable(),
+});
+
+export const servicosDoProfissional = z.object({
+  servicos: z
+    .array(
+      z.object({
+        servicoId: uuid,
+        duracaoOverrideMin: z.number().int().min(5).max(600).nullable(),
+        valorOverrideCentavos: z.number().int().min(0).max(99_999_999).nullable(),
+      }),
+    )
+    .max(200),
+});
+
 export const ROTAS = {
   saude: {
     metodo: 'GET',
@@ -223,6 +278,50 @@ export const ROTAS = {
     caminho: '/auth/eu',
     publica: false,
     resposta: usuarioDaSessao,
+  },
+
+  listarEquipe: {
+    metodo: 'GET',
+    caminho: '/equipe',
+    publica: false,
+    resposta: equipeCompleta,
+  },
+
+  criarProfissional: {
+    metodo: 'POST',
+    caminho: '/equipe/profissionais',
+    publica: false,
+    corpo: dadosDoProfissional,
+    resposta: equipeCompleta,
+  },
+
+  atualizarProfissional: {
+    metodo: 'PATCH',
+    caminho: '/equipe/profissionais/:id',
+    publica: false,
+    params: z.object({ id: uuid }),
+    corpo: dadosDoProfissional,
+    resposta: equipeCompleta,
+  },
+
+  /** Desativar com agenda futura é bloqueado até resolver (6.3). */
+  definirProfissionalAtivo: {
+    metodo: 'PATCH',
+    caminho: '/equipe/profissionais/:id/ativo',
+    publica: false,
+    params: z.object({ id: uuid }),
+    corpo: z.object({ ativo: z.boolean() }),
+    resposta: equipeCompleta,
+  },
+
+  /** Substitui a lista inteira: é o que a tela edita, com as caixas marcadas. */
+  definirServicosDoProfissional: {
+    metodo: 'PUT',
+    caminho: '/equipe/profissionais/:id/servicos',
+    publica: false,
+    params: z.object({ id: uuid }),
+    corpo: servicosDoProfissional,
+    resposta: equipeCompleta,
   },
 
   convidar: {
@@ -430,3 +529,8 @@ export type Categoria = z.infer<typeof categoria>;
 export type DadosDaCategoria = z.infer<typeof dadosDaCategoria>;
 export type ServicoDoPainel = z.infer<typeof servicoDoPainel>;
 export type DadosDoServico = z.infer<typeof dadosDoServico>;
+export type EquipeCompleta = z.infer<typeof equipeCompleta>;
+export type MembroDaEquipe = z.infer<typeof membroDaEquipe>;
+export type AcessoDaEquipe = z.infer<typeof acessoDaEquipe>;
+export type DadosDoProfissional = z.infer<typeof dadosDoProfissional>;
+export type ServicosDoProfissional = z.infer<typeof servicosDoProfissional>;

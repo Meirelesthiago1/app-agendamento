@@ -13,6 +13,7 @@ import * as disponibilidade from './modulos/disponibilidade/casos-de-uso.ts';
 import { obterCatalogoPublico } from './modulos/estabelecimentos/casos-de-uso.ts';
 import * as configuracao from './modulos/estabelecimentos/configuracao.ts';
 import { buscarPorSlug, type Estabelecimento } from './modulos/estabelecimentos/repositorio.ts';
+import * as equipe from './modulos/profissionais/casos-de-uso.ts';
 import * as catalogo from './modulos/servicos/casos-de-uso.ts';
 import { pluginDeAutenticacao } from './plugins/autenticacao.ts';
 import { pluginDeContexto } from './plugins/contexto.ts';
@@ -182,6 +183,30 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
   });
 
   registrarRota(app, 'eu', async ({ requisicao }) => comoUsuarioDaSessao(requisicao));
+
+  registrarRota(app, 'listarEquipe', async ({ requisicao }) =>
+    equipe.listar(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'criarProfissional', async ({ corpo, requisicao }) =>
+    equipe.criarProfissional(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarProfissional', async ({ params, corpo, requisicao }) =>
+    equipe.atualizarProfissional(exigirSessaoComTenant(requisicao), params.id, corpo),
+  );
+
+  registrarRota(app, 'definirProfissionalAtivo', async ({ params, corpo, requisicao }) =>
+    equipe.definirProfissionalAtivo(exigirSessaoComTenant(requisicao), params.id, corpo.ativo),
+  );
+
+  registrarRota(app, 'definirServicosDoProfissional', async ({ params, corpo, requisicao }) =>
+    equipe.definirServicosDoProfissional(
+      exigirSessaoComTenant(requisicao),
+      params.id,
+      corpo.servicos,
+    ),
+  );
 
   registrarRota(app, 'convidar', async ({ corpo, requisicao }) => {
     const autenticado = requisicao.autenticado;
