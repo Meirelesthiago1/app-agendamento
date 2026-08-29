@@ -1,14 +1,23 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import {
+  agendamentoItens,
   agendamentos,
+  auditoria,
+  categoriasServico,
   clientes,
+  codigosVerificacao,
   configuracoes,
   estabelecimentos,
+  excecoesAgenda,
   horariosTrabalho,
+  identidadesExternas,
+  lancamentos,
+  notificacoes,
   profissionais,
   profissionaisServicos,
   servicos,
+  sessoes,
   usuarios,
   vinculos,
 } from './esquema/index.js';
@@ -174,13 +183,28 @@ export async function semear(bd: Executor): Promise<void> {
   }
 }
 
+/**
+ * Todas as tabelas, das folhas para a raiz. É a lista inteira de propósito:
+ * esquecer uma só aparece como violação de chave estrangeira ao resemear um
+ * banco que já foi usado — e nunca em teste, porque lá o container é sempre
+ * novo. Foi o que aconteceu com `sessoes` depois da etapa 5.
+ */
 export async function limpar(bd: Executor): Promise<void> {
+  await bd.delete(lancamentos);
+  await bd.delete(notificacoes);
+  await bd.delete(auditoria);
+  await bd.delete(agendamentoItens);
   await bd.delete(agendamentos);
+  await bd.delete(excecoesAgenda);
   await bd.delete(horariosTrabalho);
   await bd.delete(profissionaisServicos);
-  await bd.delete(clientes);
   await bd.delete(servicos);
+  await bd.delete(categoriasServico);
+  await bd.delete(clientes);
   await bd.delete(profissionais);
+  await bd.delete(sessoes);
+  await bd.delete(codigosVerificacao);
+  await bd.delete(identidadesExternas);
   await bd.delete(vinculos);
   await bd.delete(usuarios);
   await bd.delete(configuracoes);

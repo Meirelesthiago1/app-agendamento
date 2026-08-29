@@ -38,3 +38,32 @@ export const listaDeUuids = z
   .string()
   .transform((valor) => valor.split(',').filter((parte) => parte.length > 0))
   .pipe(z.array(uuid).min(1).max(5));
+
+/**
+ * Mercado nacional (premissa do planejamento), então a lista é fechada: fuso
+ * digitado à mão erra em silêncio, e um `America/Sao_paulo` com minúscula faz o
+ * Luxon devolver `Invalid DateTime` na primeira conversão de agenda.
+ */
+export const FUSOS_BRASIL = [
+  'America/Noronha',
+  'America/Belem',
+  'America/Fortaleza',
+  'America/Recife',
+  'America/Araguaina',
+  'America/Maceio',
+  'America/Bahia',
+  'America/Sao_Paulo',
+  'America/Campo_Grande',
+  'America/Cuiaba',
+  'America/Santarem',
+  'America/Porto_Velho',
+  'America/Boa_Vista',
+  'America/Manaus',
+  'America/Eirunepe',
+  'America/Rio_Branco',
+] as const;
+
+export const fusoHorario = z.enum(FUSOS_BRASIL);
+
+/** Hex de sete caracteres, o formato de `cor_tema` e `servicos.cor` (8.2, 8.4). */
+export const corHex = z.string().regex(/^#[0-9a-f]{6}$/, 'use o formato #rrggbb');

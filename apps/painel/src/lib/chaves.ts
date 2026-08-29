@@ -23,6 +23,7 @@ export function chavesDe(estabelecimentoId: string) {
   return {
     /** Prefixo do estabelecimento inteiro, para invalidar tudo dele de uma vez. */
     tudo: raiz,
+    configuracao: [...raiz, 'configuracao'] as const,
     catalogo: [...raiz, 'catalogo'] as const,
     equipe: [...raiz, 'equipe'] as const,
     servicos: [...raiz, 'servicos'] as const,

@@ -11,6 +11,7 @@ import * as auth from './modulos/auth/casos-de-uso.ts';
 import { encerrarSessao, NOME_DO_COOKIE } from './modulos/auth/sessao.ts';
 import * as disponibilidade from './modulos/disponibilidade/casos-de-uso.ts';
 import { obterCatalogoPublico } from './modulos/estabelecimentos/casos-de-uso.ts';
+import * as configuracao from './modulos/estabelecimentos/configuracao.ts';
 import { buscarPorSlug, type Estabelecimento } from './modulos/estabelecimentos/repositorio.ts';
 import { pluginDeAutenticacao } from './plugins/autenticacao.ts';
 import { pluginDeContexto } from './plugins/contexto.ts';
@@ -58,6 +59,19 @@ function exigirTenant(requisicao: FastifyRequest): {
   }
 
   return { contexto, estabelecimento };
+}
+
+/**
+ * Rota do painel: exige sessão e vínculo. Devolve o contexto já com papel, que
+ * é o que o caso de uso usa para consultar a matriz de 2.3 — a decisão de
+ * permissão fica no caso de uso, nunca aqui.
+ */
+function exigirSessaoComTenant(requisicao: FastifyRequest): Contexto {
+  if (requisicao.autenticado === null) {
+    throw new ErroDominio('SEM_PERMISSAO', 'Entre para continuar.');
+  }
+
+  return requisicao.resolvido().contexto;
 }
 
 export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
@@ -226,6 +240,18 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
 
     return { ok: true };
   });
+
+  registrarRota(app, 'obterConfiguracao', async ({ requisicao }) =>
+    configuracao.obter(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'atualizarEstabelecimento', async ({ corpo, requisicao }) =>
+    configuracao.atualizarDados(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarPoliticas', async ({ corpo, requisicao }) =>
+    configuracao.atualizarPoliticas(exigirSessaoComTenant(requisicao), corpo),
+  );
 
   registrarRota(app, 'catalogo', async ({ requisicao }) => {
     const { contexto, estabelecimento } = exigirTenant(requisicao);

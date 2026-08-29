@@ -1,6 +1,6 @@
 import { EXIBICOES_VALOR } from '@agendamento/dominio';
 import { z } from 'zod';
-import { dataLocal, listaDeUuids, slug, uuid } from './comuns.js';
+import { corHex, dataLocal, fusoHorario, listaDeUuids, slug, uuid } from './comuns.js';
 
 export type Metodo = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -77,6 +77,47 @@ export const usuarioDaSessao = z.object({
 export const senha = z.string().min(8).max(200);
 
 const feito = z.object({ ok: z.boolean() });
+
+/** O que a tela de configurações edita em `estabelecimentos` (8.2). */
+export const dadosDoEstabelecimento = z.object({
+  nome: z.string().min(2).max(120),
+  slug,
+  segmento: z.string().max(50).nullable(),
+  fusoHorario,
+  logoUrl: z.url().max(500).nullable(),
+  corTema: corHex.nullable(),
+  telefonePublico: z
+    .string()
+    .regex(/^\d{10,11}$/, 'informe DDD e número')
+    .nullable(),
+  enderecoPublico: z.string().max(300).nullable(),
+});
+
+/**
+ * As doze chaves de `configuracoes` (8.2). Os limites são de sanidade, não de
+ * produto: granularidade de zero divide por zero no motor de slots, e janela de
+ * dez anos faz `dias-com-vaga` varrer 3650 dias por requisição.
+ */
+export const politicasDoEstabelecimento = z.object({
+  granularidadeSlotMin: z.number().int().min(5).max(120),
+  estrategiaSlot: z.enum(['GRADE', 'COMPACTO']),
+  antecedenciaMinimaMin: z.number().int().min(0).max(43_200),
+  janelaAgendamentoDias: z.number().int().min(1).max(365),
+  prazoCancelamentoMin: z.number().int().min(0).max(43_200),
+  confirmacaoAutomatica: z.boolean(),
+  permiteSemCadastro: z.boolean(),
+  permiteMultiplosServicos: z.boolean(),
+  exigeOtpTelefone: z.boolean(),
+  staffVeAgendaCompleta: z.boolean(),
+  folgaPodeExcederJanela: z.boolean(),
+  /** Nulo é "sem limite", que é diferente de zero — zero proibiria agendar. */
+  maxAtivosPorCliente: z.number().int().min(1).max(100).nullable(),
+});
+
+export const configuracaoCompleta = z.object({
+  estabelecimento: dadosDoEstabelecimento.extend({ id: uuid }),
+  politicas: politicasDoEstabelecimento,
+});
 
 export const ROTAS = {
   saude: {
@@ -176,6 +217,29 @@ export const ROTAS = {
     resposta: feito,
   },
 
+  obterConfiguracao: {
+    metodo: 'GET',
+    caminho: '/configuracoes',
+    publica: false,
+    resposta: configuracaoCompleta,
+  },
+
+  atualizarEstabelecimento: {
+    metodo: 'PATCH',
+    caminho: '/configuracoes/estabelecimento',
+    publica: false,
+    corpo: dadosDoEstabelecimento,
+    resposta: configuracaoCompleta,
+  },
+
+  atualizarPoliticas: {
+    metodo: 'PATCH',
+    caminho: '/configuracoes/politicas',
+    publica: false,
+    corpo: politicasDoEstabelecimento,
+    resposta: configuracaoCompleta,
+  },
+
   catalogo: {
     metodo: 'GET',
     caminho: '/publico/:slug/catalogo',
@@ -253,3 +317,6 @@ export type Catalogo = SaidaDe<Rotas['catalogo']>;
 export type Slots = SaidaDe<Rotas['slots']>;
 export type DiasComVaga = SaidaDe<Rotas['diasComVaga']>;
 export type UsuarioDaSessao = SaidaDe<Rotas['eu']>;
+export type ConfiguracaoCompleta = SaidaDe<Rotas['obterConfiguracao']>;
+export type DadosDoEstabelecimento = z.infer<typeof dadosDoEstabelecimento>;
+export type Politicas = z.infer<typeof politicasDoEstabelecimento>;

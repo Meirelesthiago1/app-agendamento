@@ -19,6 +19,7 @@ describe('o estabelecimento entra em toda chave escopada', () => {
 
   const todas: readonly (readonly unknown[])[] = [
     chaves.tudo,
+    chaves.configuracao,
     chaves.catalogo,
     chaves.equipe,
     chaves.servicos,
