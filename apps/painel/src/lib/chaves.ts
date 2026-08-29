@@ -26,6 +26,10 @@ export function chavesDe(estabelecimentoId: string) {
     configuracao: [...raiz, 'configuracao'] as const,
     catalogo: [...raiz, 'catalogo'] as const,
     equipe: [...raiz, 'equipe'] as const,
+    horarios: [...raiz, 'horarios'] as const,
+    /** Prefixo, para invalidar toda janela consultada de uma vez. */
+    excecoesTudo: [...raiz, 'excecoes'] as const,
+    excecoes: (periodo: string) => [...raiz, 'excecoes', periodo] as const,
     servicos: [...raiz, 'servicos'] as const,
     clientes: (filtro: string) => [...raiz, 'clientes', filtro] as const,
     agendaDoDia: (data: string) => [...raiz, 'agenda', data] as const,

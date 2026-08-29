@@ -218,6 +218,92 @@ export const servicosDoProfissional = z.object({
     .max(200),
 });
 
+/** `HH:MM`, hora local do estabelecimento. O banco guarda `time` (8.5). */
+export const horaLocal = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'use o formato HH:MM');
+
+export const faixaDeTrabalho = z.object({
+  /** 0 = domingo … 6 = sábado, como a coluna guarda. */
+  diaSemana: z.number().int().min(0).max(6),
+  horaInicio: horaLocal,
+  horaFim: horaLocal,
+});
+
+export type FaixaDeTrabalho = z.infer<typeof faixaDeTrabalho>;
+
+function emMinutos(hora: string): number {
+  const [h, m] = hora.split(':');
+
+  return Number(h) * 60 + Number(m);
+}
+
+/**
+ * Duas faixas do mesmo dia não podem se sobrepor. Não é preferência: o motor de
+ * disponibilidade somaria o intervalo comum duas vezes, e o mesmo horário
+ * apareceria duas vezes na tela do cliente.
+ *
+ * A checagem vive no contrato para valer nos dois lados — o formulário aponta a
+ * linha errada antes de enviar, e o servidor recusa de qualquer forma.
+ */
+export const gradeSemanal = z
+  .object({ faixas: z.array(faixaDeTrabalho).max(50) })
+  .superRefine((valor, contexto) => {
+    valor.faixas.forEach((faixa, indice) => {
+      if (emMinutos(faixa.horaFim) <= emMinutos(faixa.horaInicio)) {
+        contexto.addIssue({
+          code: 'custom',
+          path: ['faixas', indice, 'horaFim'],
+          message: 'o fim precisa ser depois do início',
+        });
+      }
+    });
+
+    valor.faixas.forEach((faixa, indice) => {
+      const conflita = valor.faixas.some(
+        (outra, outroIndice) =>
+          outroIndice < indice &&
+          outra.diaSemana === faixa.diaSemana &&
+          emMinutos(outra.horaInicio) < emMinutos(faixa.horaFim) &&
+          emMinutos(faixa.horaInicio) < emMinutos(outra.horaFim),
+      );
+
+      if (conflita) {
+        contexto.addIssue({
+          code: 'custom',
+          path: ['faixas', indice, 'horaInicio'],
+          message: 'este intervalo se sobrepõe a outro do mesmo dia',
+        });
+      }
+    });
+  });
+
+export const gradeDoProfissional = z.object({
+  profissionalId: uuid,
+  nomeExibicao: z.string(),
+  ativo: z.boolean(),
+  faixas: z.array(faixaDeTrabalho),
+  /** Desde quando a grade vigente vale. Nulo quando a pessoa não tem grade. */
+  vigenciaInicio: dataLocal.nullable(),
+});
+
+export const excecaoDeAgenda = z.object({
+  id: uuid,
+  /** Nulo é o estabelecimento inteiro (8.5). */
+  profissionalId: uuid.nullable(),
+  tipo: z.enum(['BLOQUEIO', 'EXTRA']),
+  iniciaEm: z.iso.datetime(),
+  terminaEm: z.iso.datetime(),
+  diaInteiro: z.boolean(),
+  /** Interno, nunca exposto ao cliente (5.9). */
+  motivo: z.string().max(120).nullable(),
+});
+
+export const dadosDaExcecao = excecaoDeAgenda
+  .omit({ id: true })
+  .refine((valor) => new Date(valor.terminaEm) > new Date(valor.iniciaEm), {
+    message: 'o fim precisa ser depois do início',
+    path: ['terminaEm'],
+  });
+
 export const ROTAS = {
   saude: {
     metodo: 'GET',
@@ -278,6 +364,47 @@ export const ROTAS = {
     caminho: '/auth/eu',
     publica: false,
     resposta: usuarioDaSessao,
+  },
+
+  /** A grade **vigente** de cada pessoa. Versões passadas não têm tela (6.5). */
+  listarHorarios: {
+    metodo: 'GET',
+    caminho: '/horarios',
+    publica: false,
+    resposta: z.object({ grades: z.array(gradeDoProfissional) }),
+  },
+
+  definirGrade: {
+    metodo: 'PUT',
+    caminho: '/horarios/:profissionalId',
+    publica: false,
+    params: z.object({ profissionalId: uuid }),
+    corpo: gradeSemanal,
+    resposta: z.object({ grades: z.array(gradeDoProfissional) }),
+  },
+
+  listarExcecoes: {
+    metodo: 'GET',
+    caminho: '/excecoes',
+    publica: false,
+    query: z.object({ de: dataLocal, ate: dataLocal }),
+    resposta: z.object({ excecoes: z.array(excecaoDeAgenda) }),
+  },
+
+  criarExcecao: {
+    metodo: 'POST',
+    caminho: '/excecoes',
+    publica: false,
+    corpo: dadosDaExcecao,
+    resposta: excecaoDeAgenda,
+  },
+
+  removerExcecao: {
+    metodo: 'DELETE',
+    caminho: '/excecoes/:id',
+    publica: false,
+    params: z.object({ id: uuid }),
+    resposta: z.object({ ok: z.boolean() }),
   },
 
   listarEquipe: {
@@ -534,3 +661,7 @@ export type MembroDaEquipe = z.infer<typeof membroDaEquipe>;
 export type AcessoDaEquipe = z.infer<typeof acessoDaEquipe>;
 export type DadosDoProfissional = z.infer<typeof dadosDoProfissional>;
 export type ServicosDoProfissional = z.infer<typeof servicosDoProfissional>;
+export type GradeSemanal = z.infer<typeof gradeSemanal>;
+export type GradeDoProfissional = z.infer<typeof gradeDoProfissional>;
+export type ExcecaoDeAgenda = z.infer<typeof excecaoDeAgenda>;
+export type DadosDaExcecao = z.infer<typeof dadosDaExcecao>;

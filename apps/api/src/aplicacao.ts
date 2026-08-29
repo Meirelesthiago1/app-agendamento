@@ -13,6 +13,7 @@ import * as disponibilidade from './modulos/disponibilidade/casos-de-uso.ts';
 import { obterCatalogoPublico } from './modulos/estabelecimentos/casos-de-uso.ts';
 import * as configuracao from './modulos/estabelecimentos/configuracao.ts';
 import { buscarPorSlug, type Estabelecimento } from './modulos/estabelecimentos/repositorio.ts';
+import * as horarios from './modulos/horarios/casos-de-uso.ts';
 import * as equipe from './modulos/profissionais/casos-de-uso.ts';
 import * as catalogo from './modulos/servicos/casos-de-uso.ts';
 import { pluginDeAutenticacao } from './plugins/autenticacao.ts';
@@ -183,6 +184,26 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
   });
 
   registrarRota(app, 'eu', async ({ requisicao }) => comoUsuarioDaSessao(requisicao));
+
+  registrarRota(app, 'listarHorarios', async ({ requisicao }) =>
+    horarios.listarGrades(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'definirGrade', async ({ params, corpo, requisicao }) =>
+    horarios.definirGrade(exigirSessaoComTenant(requisicao), params.profissionalId, corpo.faixas),
+  );
+
+  registrarRota(app, 'listarExcecoes', async ({ query, requisicao }) =>
+    horarios.listarExcecoes(exigirSessaoComTenant(requisicao), query.de, query.ate),
+  );
+
+  registrarRota(app, 'criarExcecao', async ({ corpo, requisicao }) =>
+    horarios.criarExcecao(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'removerExcecao', async ({ params, requisicao }) =>
+    horarios.removerExcecao(exigirSessaoComTenant(requisicao), params.id),
+  );
 
   registrarRota(app, 'listarEquipe', async ({ requisicao }) =>
     equipe.listar(exigirSessaoComTenant(requisicao)),

@@ -5,6 +5,7 @@ import {
   IconeCalendario,
   IconeCartao,
   IconeConfiguracoes,
+  IconeHorario,
   IconeLoja,
   IconePessoa,
   IconePessoas,
@@ -26,6 +27,7 @@ const NAVEGACAO: ItemDeNavegacao[] = [
   { para: '/clientes', rotulo: 'Clientes', icone: IconePessoa },
   { para: '/caixa', rotulo: 'Caixa', icone: IconeCartao },
   { para: '/equipe', rotulo: 'Equipe', icone: IconePessoas },
+  { para: '/horarios', rotulo: 'Horários', icone: IconeHorario },
   { para: '/configuracoes', rotulo: 'Ajustes', icone: IconeConfiguracoes },
 ];
 
