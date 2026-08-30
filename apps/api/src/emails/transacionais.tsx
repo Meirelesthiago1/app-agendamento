@@ -1,29 +1,6 @@
 import { Text } from '@react-email/components';
 import { BotaoDoEmail, estiloDoEmail, LayoutDoEmail } from './base.tsx';
 
-export type DadosDeVerificacao = {
-  nome: string;
-  link: string;
-};
-
-/** 24 h. Um CTA, sem conteúdo além do link (seção 4 do conteúdo). */
-export function VerificacaoDeEmail({ nome, link }: DadosDeVerificacao) {
-  const estilo = estiloDoEmail(null);
-
-  return (
-    <LayoutDoEmail
-      preheader="Confirme seu e-mail para ativar sua conta."
-      titulo="Confirme seu e-mail"
-    >
-      <Text style={estilo.texto}>Olá, {nome}. Confirme seu e-mail para ativar sua conta.</Text>
-
-      <BotaoDoEmail href={link}>Confirmar e-mail</BotaoDoEmail>
-
-      <Text style={estilo.apoio}>Este link vale por 24 horas.</Text>
-    </LayoutDoEmail>
-  );
-}
-
 export type DadosDeConvite = {
   convidadoPor: string;
   estabelecimento: string;

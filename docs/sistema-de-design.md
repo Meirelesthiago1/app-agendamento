@@ -1,10 +1,12 @@
 # Sistema de Agendamento Multi-Tenant — Sistema de Design
 
-**Versão 1.1**
+**Versão 1.2**
 
 Documento visual. Define tokens, primitivos, convenções de componente e a estratégia de identidade das duas aplicações.
 
 > **Alteração da v1.0 para a v1.1:** encerramento das pendências D-a, D-c, D-d e D-f; a D-b passou para o stack (6.10) e a D-e ganhou documento próprio. Acrescentadas as seções 2.8, 5.2 e 6.5, e as decisões D19 a D26. Nenhum token, componente ou convenção anterior foi alterado.
+>
+> **Alteração da v1.1 para a v1.2 — esta muda uma premissa.** O painel do gestor passa a ser mobile-first (D27), o que reescreve a linha de plataforma de 1.1 e duas frases de 1.2. **D16 foi emendada no lugar**, mantendo o número: o piso de 16px em input passa a valer nas duas aplicações, porque escopá-lo ao público deixava todo campo do painel dando zoom no iPhone. Acrescentadas a seção 2.6.1 e as decisões D27 a D30; `FolhaInferior` mudou de lote e `ListaOuTabela` entrou no inventário.
 
 **Entradas obrigatórias:** `planejamento-agendamento.md` (v1.3) e `definicao-stack.md` (v1.0). Este documento não redefine regra de negócio nem escolhe biblioteca de infraestrutura — apenas decide como a interface se parece e de que peças ela é feita. Referências no formato `(5.1)` apontam para o funcional; `(T14)` aponta para o stack.
 
@@ -44,11 +46,13 @@ A decisão 14 do funcional produz duas aplicações com requisitos visuais opost
 |---|---|---|
 | Identidade | Fixa, do produto | Do tenant (`logo_url`, `cor_tema`) |
 | Frequência | Diária | Esporádica |
-| Densidade | Alta — muita informação por tela | Baixa — uma decisão por tela |
-| Plataforma dominante | Desktop, com mobile obrigatório | Mobile |
+| Densidade | Alta no desktop; no celular a informação empilha, não espreme | Baixa — uma decisão por tela |
+| Plataforma dominante | Mobile, com desktop aproveitando a largura | Mobile |
 | Tolerância a peso | Alta | Crítica |
 
-Isso **não** justifica dois sistemas de design. Justifica **um contrato de tokens com dois temas**. A alternativa — cada aplicação com seu conjunto de cores e componentes — significa que corrigir o foco de um input é corrigir duas vezes, e que as duas divergem em seis meses sem ninguém ter decidido isso.
+**Toda tela do painel nasce em ~390px e cresce** (D27). O desktop ganha largura — barra lateral, tabela, grade semanal —, não uma segunda interface. O momento de maior valor do painel é o gestor bloqueando o dia às sete da manhã, no celular, sob pressão (5.9); tela que nasce no desktop e é adaptada depois quebra exatamente ali, e o defeito só aparece em dispositivo.
+
+Isso **não** justifica dois sistemas de design. Justifica **um contrato de tokens com dois temas** — e agora com mais força, porque as duas aplicações partem do mesmo ponto. A alternativa — cada aplicação com seu conjunto de cores e componentes — significa que corrigir o foco de um input é corrigir duas vezes, e que as duas divergem em seis meses sem ninguém ter decidido isso.
 
 O que varia entre as duas é o **valor** dos tokens semânticos e a densidade. O que não varia é o nome dos tokens, a API dos componentes e o comportamento.
 
@@ -73,9 +77,9 @@ A escala neutra é, na prática, a escala `gray` do Tailwind com um navy própri
 
 **O que não se aproveita:**
 
-- As telas. Favoritos, mapa, chat, carrossel de onboarding e perfil de médico não existem neste produto, e a navegação por aba inferior do kit não é a do painel.
+- As telas. Favoritos, mapa, chat, carrossel de onboarding e perfil de médico não existem neste produto. A barra inferior do kit também não serve como está: ela tem cinco destinos planos, e o painel tem sete telas — o que exige três destinos e um "Menu" que abre folha (D28).
 - **A marca.** Este é o ponto que mais importa: o kit tem uma identidade, e a página pública não pode ter. A cor da página pública é `estabelecimentos.cor_tema`, escolhida pelo gestor. O navy da referência é o **valor padrão** de quem não definiu cor — nunca uma constante do sistema.
-- A premissa de que tudo é mobile. O painel precisa de densidade de desktop, que o kit não exercita.
+- O que o kit **não** exercita é o que o painel faz com a largura extra: barra lateral, tabela de várias colunas, grade semanal. A disciplina móvel dele serve; o desktop denso é que precisa ser desenhado aqui.
 
 ### 1.3 Por que o sistema de design vem antes das telas
 
@@ -210,7 +214,9 @@ Mais uma face de fallback com `size-adjust` calibrado contra as métricas da Int
 
 **Pesos:** 400, 500 e 600. O 700 fica reservado ao `--texto-3xl`. Negrito pesado engrossa a interface densa do painel e não aparece na referência.
 
-**Piso de 16px em input do público.** Qualquer campo de formulário com fonte menor que 16px faz o Safari no iOS dar zoom ao receber foco, deslocando a tela no meio do fluxo de agendamento. É um bug real, frequente, e invisível em desenvolvimento no desktop.
+**Piso de 16px em input.** Qualquer campo de formulário com fonte menor que 16px faz o Safari no iOS dar zoom ao receber foco, deslocando a tela no meio do fluxo. É um bug real, frequente, e invisível em desenvolvimento no desktop.
+
+O eixo da regra é o **ponteiro**, não a aplicação nem a largura. O público já está coberto pelo corpo de 16px da densidade `confortavel`; o painel usa `compacta` (14px) e roda no celular do gestor, então precisa do piso igual. Escopar por largura deixaria de fora o iPad em 810px, que zooma do mesmo jeito. Acima do piso, o campo segue a densidade — o painel no desktop continua em 14px.
 
 ### 2.5 Espaçamento, raio e elevação
 
@@ -242,6 +248,14 @@ As duas aplicações usam os mesmos componentes em densidades diferentes:
 Implementado como `data-densidade` no elemento raiz, redefinindo tokens de componente. **Não** como componentes separados, nem como prop `tamanho` em cada chamada — a primeira alternativa duplica o inventário, e a segunda espalha a decisão de densidade por centenas de pontos do código.
 
 Os 44px em ponteiro grosseiro vêm de `@media (pointer: coarse)`: o painel é usado no celular do gestor, às sete da manhã, para bloquear o dia em dois toques (5.9). Alvo de 36px ali é o que faz esse fluxo falhar.
+
+#### 2.6.1 Densidade e largura são eixos diferentes
+
+O painel ser mobile-first (D27) **não** cria uma terceira densidade nem faz o painel trocar de densidade por largura. `data-densidade` continua sendo atributo do elemento raiz, definido uma vez no HTML (D7), e continuam existindo **duas** — o que preserva a matriz de D10, sete estados por duas densidades.
+
+Densidade responde a *que aplicação é esta*; largura e ponteiro respondem a *em que aparelho ela está agora*. O segundo eixo é resolvido dentro de `densidade.css` e `tailwind.css`, com `@media`, como os 44px acima já fazem. Trocar `data-densidade` em tempo de execução transformaria densidade em estado, e traria junto `--largura-conteudo: 480px`, que é errado numa listagem de painel.
+
+**Um único ponto de virada no painel: `md`, 768px** (D30). Dois pontos por tela dobram os estados a conferir e nenhum deles é conferido; um só é verificável arrastando a janela no playground.
 
 ### 2.7 Onde os tokens vivem
 
@@ -375,7 +389,8 @@ Aplicação Vite mínima em `apps/playground`, consumindo `packages/ui`. **Fora 
 |---|---|
 | `/tokens` | Cor, tipografia, espaço, raio e elevação, renderizados a partir dos tokens reais |
 | `/primitivos` | Cada primitivo, todas as variantes × os sete estados de 4.3 |
-| `/padroes` | Composições da seção 6 |
+| `/formularios` | Os controles de entrada com estado real: máscara, moeda, hora, passo e cor |
+| `/padroes` | Composições da seção 6. `ListaOuTabela` se confere aqui, arrastando a janela pelo ponto de virada |
 | `/marca` | Simulador: cola um hex, vê a rampa, o botão de exemplo e o aviso de compressão |
 | `/telas` | Quatro telas de referência, montadas só com peças do sistema |
 
@@ -460,7 +475,7 @@ Cada linha nomeia a tela que exige o componente. **Um componente sem tela na col
 | `Confirmacao` | Cancelar, bloquear, estornar | Catálogo |
 | `Combo` | Busca de cliente por nome ou telefone (4.1) | Agenda |
 | `SeletorData` | Etapa 3 do fluxo público; filtro de período do Resumo | Agenda |
-| `FolhaInferior` | Bloqueio de dia em dois toques, no celular (5.9) | Agenda |
+| `FolhaInferior` | Bloqueio de dia em dois toques, no celular (5.9); menu de navegação do painel (D28) | Catálogo |
 | `Popover` | Detalhe rápido de agendamento na grade semanal | Agenda |
 | `PainelLateral` | Formulários longos no painel desktop | Agenda |
 | `Dica` | Explicação de campo de configuração | Agenda |
@@ -476,6 +491,7 @@ Cada linha nomeia a tela que exige o componente. **Um componente sem tela na col
 | `ListaVazia` | Agenda sem agendamento, caixa sem lançamento, catálogo vazio | Fundação |
 | `BarraDeAcoes` | Rodapé fixo com ação primária — o padrão do kit, usado em todo o público | Fundação |
 | `ResumoDeValor` | Etapa 6 do fluxo; modal de conclusão. Trata `A_PARTIR_DE` e `OCULTO` (9.2) | Catálogo |
+| `ListaOuTabela` | Catálogo, equipe e toda listagem do painel: tabela no desktop, cartões no celular (D29) | Catálogo |
 | `GradeDeHorarios` | Etapa 4 do fluxo; seletor de remarcação no painel | Agenda |
 | `CalendarioDeDisponibilidade` | Etapa 3 — mês com dias sem vaga desabilitados (6.4) | Agenda |
 | `Passos` | Casca do wizard de onboarding | Onboarding |
@@ -531,7 +547,7 @@ Numeração `D`, independente do funcional e do stack, pela mesma razão de T28.
 | D13 | Inter, com numerais tabulares em dinheiro e hora | Lista de lançamentos e grade de slots alinham verticalmente; sem numerais tabulares, as colunas dançam |
 | D14 | Nenhum hex fora de `primitivos.css`, verificado no CI | Mesmo raciocínio de T25 |
 | D15 | Tema escuro fora do MVP, tokens semânticos prontos desde o início | Ligar o escuro depois vira um segundo conjunto de valores. Entregá-lo agora dobraria a calibragem de contraste e ainda precisaria conciliar o escuro com uma `cor_tema` arbitrária |
-| D16 | Piso de 16px em input do público | Abaixo disso o Safari no iOS dá zoom ao focar, deslocando a tela no meio do fluxo de agendamento. Invisível em desenvolvimento no desktop |
+| D16 | Piso de 16px em input, nas duas aplicações, escopado por ponteiro grosseiro | Abaixo disso o Safari no iOS dá zoom ao focar, deslocando a tela. Invisível em desenvolvimento no desktop. Emendada na v1.2: escopada ao público, deixava todo campo do painel — que usa `compacta`, 14px — dando zoom no celular do gestor |
 | D17 | Sombra nunca substitui borda | A referência separa planos por superfície e borda de 1px. Sombra difusa em card é o desvio que mais rápido tira a interface da família |
 | D18 | A cor do tenant não é aplicada no painel | O gestor com dois estabelecimentos veria a interface mudar de cor ao trocar de contexto. `cor_tema` aparece no painel só como amostra, na tela que a configura |
 | D19 | SVG de logo rasterizado no envio | Servir SVG como veio abre `script`, `foreignObject` e handler embutido. Sanitizar é manutenção permanente para um recurso em que ninguém precisa de vetor |
@@ -542,6 +558,10 @@ Numeração `D`, independente do funcional e do stack, pela mesma razão de T28.
 | D24 | Etapa 1 do público com alvo secundário de adicionar, nunca caixas de seleção | Caixa de seleção com botão "continuar" adiciona um passo para a maioria, que agenda um serviço só (5.1) |
 | D25 | Bloqueio de dia em folha inferior, com o motivo abaixo dos botões | O caso real é mobile e sob pressão. Motivo acima da ação é o atrito que faz o gestor resolver por WhatsApp |
 | D26 | Caixa lista o resultado líquido, com as linhas componentes atrás de um toque | Ninguém quer ver `+80, −80, +120` no fechamento do dia, e o totalizador continua somando tudo sem filtro (7.4) |
+| D27 | O painel é mobile-first; o desktop ganha largura, não uma segunda interface | O momento de maior valor é o gestor bloqueando o dia às sete da manhã, no celular, sob pressão (5.9). Tela que nasce no desktop e é adaptada quebra exatamente ali, e o defeito só aparece em dispositivo — nunca em revisão de código |
+| D28 | No celular, três destinos na barra inferior e um "Menu" em folha; no desktop, a lista inteira na lateral | Sete alvos em 390px dão 55px cada, abaixo do piso de 44px de 4.5, com rótulo truncado. O overflow vai para `FolhaInferior` porque D25 já a estabeleceu como o padrão móvel do painel. Barra e folha leem a **mesma** lista: tela sem caminho some, e some em silêncio, porque no desktop a lateral continua mostrando |
+| D29 | Toda listagem do painel é um componente só, que vira cartão abaixo do ponto de virada e tabela acima | Dois blocos irmãos no chamador significam escrever a formatação de cada célula duas vezes. A segunda nunca é vista, porque 100% do desenvolvimento acontece no desktop — e a divergência aparece primeiro para o cliente do gestor |
+| D30 | Um único ponto de virada no painel: `md`, 768px | Dois pontos por tela dobram os estados a conferir e nenhum é conferido. Não vira token: é o padrão do Tailwind, e `@theme` continua sendo o lugar caso um dia mude |
 
 ---
 

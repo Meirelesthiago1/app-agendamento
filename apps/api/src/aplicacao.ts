@@ -11,7 +11,11 @@ import * as auth from './modulos/auth/casos-de-uso.ts';
 import { encerrarSessao, NOME_DO_COOKIE } from './modulos/auth/sessao.ts';
 import * as disponibilidade from './modulos/disponibilidade/casos-de-uso.ts';
 import { obterCatalogoPublico } from './modulos/estabelecimentos/casos-de-uso.ts';
+import * as configuracao from './modulos/estabelecimentos/configuracao.ts';
 import { buscarPorSlug, type Estabelecimento } from './modulos/estabelecimentos/repositorio.ts';
+import * as horarios from './modulos/horarios/casos-de-uso.ts';
+import * as equipe from './modulos/profissionais/casos-de-uso.ts';
+import * as catalogo from './modulos/servicos/casos-de-uso.ts';
 import { pluginDeAutenticacao } from './plugins/autenticacao.ts';
 import { pluginDeContexto } from './plugins/contexto.ts';
 import { pluginDeErros } from './plugins/erros.ts';
@@ -39,8 +43,6 @@ const LIMITES = {
   // Tentativa de senha é o alvo óbvio de força bruta, e o limite por IP é a
   // primeira barreira
   '/auth/entrada': { requisicoes: 10, janelaSegundos: 60 },
-  '/auth/cadastro': { requisicoes: 5, janelaSegundos: 60 },
-  '/auth/reenviar-verificacao': { requisicoes: 3, janelaSegundos: 60 },
   '/auth/recuperacao': { requisicoes: 3, janelaSegundos: 60 },
   '/auth/nova-senha': { requisicoes: 10, janelaSegundos: 60 },
   '/auth/convite': { requisicoes: 10, janelaSegundos: 60 },
@@ -58,6 +60,19 @@ function exigirTenant(requisicao: FastifyRequest): {
   }
 
   return { contexto, estabelecimento };
+}
+
+/**
+ * Rota do painel: exige sessão e vínculo. Devolve o contexto já com papel, que
+ * é o que o caso de uso usa para consultar a matriz de 2.3 — a decisão de
+ * permissão fica no caso de uso, nunca aqui.
+ */
+function exigirSessaoComTenant(requisicao: FastifyRequest): Contexto {
+  if (requisicao.autenticado === null) {
+    throw new ErroDominio('SEM_PERMISSAO', 'Entre para continuar.');
+  }
+
+  return requisicao.resolvido().contexto;
 }
 
 export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
@@ -111,29 +126,12 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
       email: identidade.email,
       estabelecimentos: identidade.vinculos.map((v) => ({
         id: v.estabelecimentoId,
+        nome: v.nome,
         papel: v.papel,
       })),
       estabelecimentoAtual: identidade.escolhido?.estabelecimentoId ?? null,
     };
   }
-
-  registrarRota(app, 'cadastrar', async ({ corpo, requisicao }) => {
-    await auth.cadastrar(dependenciasDeAuth(), { ...corpo, ip: requisicao.ip });
-
-    return { ok: true };
-  });
-
-  registrarRota(app, 'verificarEmail', async ({ corpo }) => {
-    await auth.verificarEmail(dependenciasDeAuth(), corpo.token);
-
-    return { ok: true };
-  });
-
-  registrarRota(app, 'reenviarVerificacao', async ({ corpo, requisicao }) => {
-    await auth.reenviarVerificacao(dependenciasDeAuth(), corpo.email, requisicao.ip);
-
-    return { ok: true };
-  });
 
   registrarRota(app, 'entrar', async ({ corpo, requisicao, reply }) => {
     const sessao = await auth.entrar(dependenciasDeAuth(), {
@@ -167,6 +165,50 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
   });
 
   registrarRota(app, 'eu', async ({ requisicao }) => comoUsuarioDaSessao(requisicao));
+
+  registrarRota(app, 'listarHorarios', async ({ requisicao }) =>
+    horarios.listarGrades(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'definirGrade', async ({ params, corpo, requisicao }) =>
+    horarios.definirGrade(exigirSessaoComTenant(requisicao), params.profissionalId, corpo.faixas),
+  );
+
+  registrarRota(app, 'listarExcecoes', async ({ query, requisicao }) =>
+    horarios.listarExcecoes(exigirSessaoComTenant(requisicao), query.de, query.ate),
+  );
+
+  registrarRota(app, 'criarExcecao', async ({ corpo, requisicao }) =>
+    horarios.criarExcecao(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'removerExcecao', async ({ params, requisicao }) =>
+    horarios.removerExcecao(exigirSessaoComTenant(requisicao), params.id),
+  );
+
+  registrarRota(app, 'listarEquipe', async ({ requisicao }) =>
+    equipe.listar(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'criarProfissional', async ({ corpo, requisicao }) =>
+    equipe.criarProfissional(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarProfissional', async ({ params, corpo, requisicao }) =>
+    equipe.atualizarProfissional(exigirSessaoComTenant(requisicao), params.id, corpo),
+  );
+
+  registrarRota(app, 'definirProfissionalAtivo', async ({ params, corpo, requisicao }) =>
+    equipe.definirProfissionalAtivo(exigirSessaoComTenant(requisicao), params.id, corpo.ativo),
+  );
+
+  registrarRota(app, 'definirServicosDoProfissional', async ({ params, corpo, requisicao }) =>
+    equipe.definirServicosDoProfissional(
+      exigirSessaoComTenant(requisicao),
+      params.id,
+      corpo.servicos,
+    ),
+  );
 
   registrarRota(app, 'convidar', async ({ corpo, requisicao }) => {
     const autenticado = requisicao.autenticado;
@@ -226,6 +268,46 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
 
     return { ok: true };
   });
+
+  registrarRota(app, 'obterConfiguracao', async ({ requisicao }) =>
+    configuracao.obter(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'atualizarEstabelecimento', async ({ corpo, requisicao }) =>
+    configuracao.atualizarDados(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarPoliticas', async ({ corpo, requisicao }) =>
+    configuracao.atualizarPoliticas(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'listarCatalogo', async ({ requisicao }) =>
+    catalogo.listar(exigirSessaoComTenant(requisicao)),
+  );
+
+  registrarRota(app, 'criarCategoria', async ({ corpo, requisicao }) =>
+    catalogo.criarCategoria(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarCategoria', async ({ params, corpo, requisicao }) =>
+    catalogo.atualizarCategoria(exigirSessaoComTenant(requisicao), params.id, corpo),
+  );
+
+  registrarRota(app, 'removerCategoria', async ({ params, requisicao }) =>
+    catalogo.removerCategoria(exigirSessaoComTenant(requisicao), params.id),
+  );
+
+  registrarRota(app, 'criarServico', async ({ corpo, requisicao }) =>
+    catalogo.criarServico(exigirSessaoComTenant(requisicao), corpo),
+  );
+
+  registrarRota(app, 'atualizarServico', async ({ params, corpo, requisicao }) =>
+    catalogo.atualizarServico(exigirSessaoComTenant(requisicao), params.id, corpo),
+  );
+
+  registrarRota(app, 'definirServicoAtivo', async ({ params, corpo, requisicao }) =>
+    catalogo.definirServicoAtivo(exigirSessaoComTenant(requisicao), params.id, corpo.ativo),
+  );
 
   registrarRota(app, 'catalogo', async ({ requisicao }) => {
     const { contexto, estabelecimento } = exigirTenant(requisicao);

@@ -5,9 +5,7 @@ import {
   ConviteDeEquipe,
   type DadosDeConvite,
   type DadosDeRecuperacao,
-  type DadosDeVerificacao,
   RecuperacaoDeSenha,
-  VerificacaoDeEmail,
 } from './transacionais.tsx';
 
 /** Assunto com no máximo 60 caracteres, decisivo antes do 35 (3.0). */
@@ -35,10 +33,6 @@ async function montar(para: string, assunto: string, elemento: ReactElement): Pr
   return { para, assunto: exigirAssuntoCurto(assunto), html, texto };
 }
 
-export function emailDeVerificacao(para: string, dados: DadosDeVerificacao): Promise<Mensagem> {
-  return montar(para, 'Confirme seu e-mail', VerificacaoDeEmail(dados));
-}
-
 export function emailDeConvite(para: string, dados: DadosDeConvite): Promise<Mensagem> {
   // O nome de quem convida vem primeiro: é a informação que decide se a pessoa
   // abre, e precisa caber antes do corte do celular
@@ -53,4 +47,4 @@ export function emailDeRecuperacao(para: string, dados: DadosDeRecuperacao): Pro
   return montar(para, 'Redefinir sua senha', RecuperacaoDeSenha(dados));
 }
 
-export type { DadosDeConvite, DadosDeRecuperacao, DadosDeVerificacao };
+export type { DadosDeConvite, DadosDeRecuperacao };

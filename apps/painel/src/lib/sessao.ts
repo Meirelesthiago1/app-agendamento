@@ -1,9 +1,11 @@
 import type { UsuarioDaSessao } from '@agendamento/contratos';
 import { eErroDaApi } from '@agendamento/contratos';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
+import { useCallback } from 'react';
 import { api } from './api.ts';
 import { CHAVES_GLOBAIS } from './chaves.ts';
-import { encerrarSessaoLocal } from './consultas.ts';
+import { encerrarSessaoLocal, trocarEstabelecimento } from './consultas.ts';
 import { definirEstabelecimentoAtual, estabelecimentoAtual } from './estabelecimento-atual.ts';
 
 /**
@@ -44,6 +46,38 @@ export function useEntrar() {
   });
 }
 
+/**
+ * Aceitar convite é o **único** caminho de entrada de quem ainda não tem senha
+ * (2.2). Define a senha e já abre sessão, então invalida a sessão em cache pelo
+ * mesmo motivo do login: os vínculos só resolvem na requisição seguinte.
+ */
+export function useAceitarConvite() {
+  const cliente = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dados: { token: string; senha: string }) => api.aceitarConvite({ corpo: dados }),
+    onSuccess: async () => {
+      await cliente.invalidateQueries({ queryKey: CHAVES_GLOBAIS.sessao });
+    },
+  });
+}
+
+export function usePedirRecuperacao() {
+  return useMutation({
+    mutationFn: (email: string) => api.pedirRecuperacao({ corpo: { email } }),
+  });
+}
+
+/** Redefinir revoga **todas** as sessões, inclusive a de quem está redefinindo. */
+export function useRedefinirSenha() {
+  const cliente = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dados: { token: string; senha: string }) => api.redefinirSenha({ corpo: dados }),
+    onSuccess: () => encerrarSessaoLocal(cliente),
+  });
+}
+
 export function useSair() {
   const cliente = useQueryClient();
 
@@ -51,6 +85,27 @@ export function useSair() {
     mutationFn: () => api.sair(),
     onSuccess: () => encerrarSessaoLocal(cliente),
   });
+}
+
+/**
+ * Trocar de estabelecimento são três passos que precisam acontecer juntos:
+ * gravar a escolha, invalidar as consultas e revalidar o roteador. Duas cópias
+ * disso — o seletor do desktop e o menu do celular — divergiriam na primeira
+ * vez que um passo mudasse, e a que ficasse para trás mostraria dado do
+ * estabelecimento anterior sem errar nada visível.
+ */
+export function useTrocarEstabelecimento() {
+  const cliente = useQueryClient();
+  const roteador = useRouter();
+
+  return useCallback(
+    async (id: string) => {
+      trocarEstabelecimento(id);
+      await cliente.invalidateQueries();
+      await roteador.invalidate();
+    },
+    [cliente, roteador],
+  );
 }
 
 /**

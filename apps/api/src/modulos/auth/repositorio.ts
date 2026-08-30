@@ -155,6 +155,7 @@ export async function revogarTodasDoUsuario(tx: Transacao, usuarioId: string): P
 export type VinculoAtivo = {
   id: string;
   estabelecimentoId: string;
+  nome: string;
   papel: Papel;
 };
 
@@ -171,13 +172,18 @@ export async function listarVinculosAtivos(
   // variável some antes da consulta seguinte
   await tx.execute(sql`SELECT set_config('app.usuario_id', ${usuarioId}, true)`);
 
+  // O nome vem junto porque quem escolhe entre dois estabelecimentos precisa
+  // lê-los. A leitura de `estabelecimentos` é aberta pela política de 1.1 —
+  // é ela que também resolve o slug público antes de existir tenant
   return tx
     .select({
       id: vinculos.id,
       estabelecimentoId: vinculos.estabelecimentoId,
+      nome: estabelecimentos.nome,
       papel: vinculos.papel,
     })
     .from(vinculos)
+    .innerJoin(estabelecimentos, eq(vinculos.estabelecimentoId, estabelecimentos.id))
     .where(and(eq(vinculos.usuarioId, usuarioId), eq(vinculos.status, 'ATIVO')));
 }
 

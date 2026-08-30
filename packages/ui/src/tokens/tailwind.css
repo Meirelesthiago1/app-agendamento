@@ -87,9 +87,15 @@
 
   /*
    * Campo com fonte menor que 16px faz o Safari no iOS dar zoom ao receber foco,
-   * deslocando a tela no meio do fluxo de agendamento (2.4).
+   * deslocando a tela (D16).
+   *
+   * O eixo é o **ponteiro**, não a aplicação nem a largura: o painel roda em
+   * `compacta` (14px) e é usado no celular do gestor, e um iPad em 810px zooma
+   * igual. O `max` deixa o painel em 14px no desktop, onde não há o problema.
    */
-  [data-densidade="confortavel"] :is(input, select, textarea) {
-    font-size: max(1rem, var(--texto-corpo));
+  @media (pointer: coarse) {
+    :is(input, select, textarea) {
+      font-size: max(1rem, var(--texto-corpo));
+    }
   }
 }

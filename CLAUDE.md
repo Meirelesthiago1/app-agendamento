@@ -5,9 +5,9 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: etapas 0 a 6 concluídas. A etapa 7 (configuração, catálogo, equipe e
-horários) é o próximo passo.** O detalhe está em "Onde a
-implementação está", no fim deste arquivo.
+**Estado: etapas 0 a 7 concluídas. A etapa 8 (provisionamento e onboarding) é o
+próximo passo — o provisionamento já está de pé; falta o wizard.**
+O detalhe está em "Onde a implementação está", no fim deste arquivo.
 
 ---
 
@@ -128,8 +128,16 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | 2 — Domínio | `main` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
 | 3 — API | `main` | `contratos` com `ROTAS` e cliente próprio, Fastify com os quatro plugins, `unidadeDeTrabalho`, as cinco portas locais, e quatro rotas reais |
 | 4 — Design | `main` | Tokens em três camadas, `derivarPaleta` em OKLCH, os 18 componentes do lote de fundação, e o playground com `/tokens`, `/primitivos` e `/marca` |
-| 5 — Autenticação | `main` | argon2id, sessão opaca de 30 dias, os três transacionais em React Email, cadastro, convite de equipe e recuperação de senha |
-| 6 — Painel | `etapa-6-painel` | Vite + TanStack Router/Query, guarda de rota, layout nas duas larguras, seletor de estabelecimento, `ControlePermissao` e estado de tabela na URL |
+| 5 — Autenticação | `main` | argon2id, sessão opaca de 30 dias, os transacionais em React Email, convite de equipe e recuperação de senha |
+| 6 — Painel | `main` | Vite + TanStack Router/Query, guarda de rota, layout nas duas larguras, seletor de estabelecimento, `ControlePermissao` e estado de tabela na URL |
+| 7 — Configuração | `etapa-7-configuracao` | O lote de doze componentes, as doze chaves de 8.2, catálogo, equipe nas três combinações de 2.4, grade versionada por vigência e exceções |
+| 8 — Provisionamento | `etapa-7-configuracao` | `provisionarTenant` e a linha de comando; cadastro aberto removido; `/convite`, `/recuperacao` e `/nova-senha` no painel. **Falta o wizard de onboarding.** |
+
+**Fora da numeração das etapas, na mesma branch:** o painel virou mobile-first
+(D27), o que reescreveu o §1.1 do design para a **v1.2** e trouxe `FolhaInferior`
+e `ListaOuTabela` da etapa 9 para a 7. Veio de o usuário testar a etapa 7 no
+celular e apontar três coisas — barra com sete itens, tabela rolando para o lado,
+e a grade de horários ilegível.
 
 Levantar o ambiente do zero:
 
@@ -151,7 +159,27 @@ ALTER ROLE agendamento_publico WITH PASSWORD 'agendamento';
 e aponte `BANCO_URL` e `BANCO_URL_PUBLICO` para esses papéis — não para o dono do
 banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/servidor.ts`.
 
-`DIRETO_BANCO_URL` precisa estar no ambiente ou em `.env` — ver `.env.exemplo`.
+`DIRETO_BANCO_URL` precisa estar no ambiente ou em `.env`, e aponta para o **dono
+do banco**, não para um dos papéis — ver `.env.exemplo`. Migração, semente e
+provisionamento escrevem em `estabelecimentos`, que não tem política de inserção.
+
+**Não existe cadastro aberto de gestor** (2.2). Um tenant nasce assim:
+
+```
+pnpm --filter @agendamento/api provisionar -- \
+  --nome "Barbearia Corte Fino" --slug corte-fino \
+  --email dono@exemplo.com --responsavel "Rui Barbosa"
+```
+
+O comando cria o estabelecimento, as configurações padrão, o vínculo de
+proprietário como `CONVIDADO` e o registro em `profissionais`, e envia o convite.
+O link também é impresso, para o caso de o SMTP falhar. Quem define a senha é o
+proprietário, pelo `/convite` do painel.
+
+**A semente não define senha.** Ela cria os dois estabelecimentos com o e-mail já
+verificado e `senha_hash` nulo, então não dá para entrar neles direto. Para
+destravar, use a recuperação de senha e pegue o link no Mailpit (`localhost:8025`)
+— é o mesmo caminho de quem esqueceu a senha, e exercita o fluxo de verdade.
 
 **Decidido durante a implementação, fora dos seis documentos:**
 
@@ -242,11 +270,94 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
 - `chavesDe(estabelecimentoId)` é o **único** caminho para uma chave de cache
   escopada, e já embute o id na raiz. Há teste percorrendo o que ela devolve.
   Trocar de estabelecimento invalida, nunca `clear()` — `clear()` é do logout.
-- `src/rotaArvore.gen.ts` é gerado pelo plugin do TanStack Router: fora do Biome
-  e fora do git.
 - O `dev` da API usa `node --import tsx`. O Node executa `.ts` nativamente mas
   **não** `.tsx` — ele remove tipos, não transforma JSX, e os templates de e-mail
   são JSX. O build por `tsc` segue igual.
+- `src/rotaArvore.gen.ts` é **versionado**, como a documentação do TanStack
+  Router recomenda. Foi tentado gerá-lo dentro do `tipos`, o que manteria uma
+  fonte de verdade só, mas o gerador exige configuração interna que o plugin do
+  Vite monta e não expõe. O desvio aparece assim que alguém roda `dev` ou
+  `build`: o arquivo muda e salta no `git status`. Segue fora do Biome.
+- **As mensagens de validação do Zod são ligadas em português uma vez**, em
+  `packages/contratos/src/idioma.ts`. Elas chegam à tela pelo `campos` da
+  resposta de erro, e o padrão do Zod é inglês — contra a regra de voz da seção
+  1 do conteúdo. O pacote só exporta `.`, então o efeito colateral sempre roda.
+- `limpar` da semente cobre **todas** as tabelas, das folhas para a raiz.
+  Esquecer uma só aparece como violação de chave estrangeira ao resemear um banco
+  já usado, e nunca em teste — lá o container é sempre novo.
+- **`FUSOS_BRASIL` é lista fechada** em `contratos/comuns.ts`. Fuso digitado à
+  mão erra em silêncio, e `America/Sao_paulo` com minúscula faz o Luxon devolver
+  `Invalid DateTime` na primeira conversão de agenda. A coluna é `varchar`, então
+  a leitura valida na fronteira em vez de afrouxar o contrato.
+- Conferir slug antes de gravar existe pela **mensagem**, não pela garantia:
+  quem garante é o índice único. Sem a consulta, o gestor veria um erro de
+  constraint do Postgres.
+- Toda escrita de configuração, catálogo e equipe devolve o **conjunto inteiro**,
+  e a tela escreve a resposta no cache em vez de invalidar. Remover uma categoria
+  muda a metade da tela que não foi tocada — os serviços dela ficam sem categoria
+  —, e responder só o que mudou deixaria a outra metade mentindo.
+- **A regra de 6.3 está pela metade, de propósito.** Desativar serviço ou
+  profissional com agenda futura é bloqueado, e a recusa diz quantos
+  agendamentos a causam. As duas saídas que a regra oferece — transferência em
+  lote e cancelamento com aviso — dependem de `ResolucaoEmLote`, que o plano
+  coloca na etapa 9. A tela diz isso a quem esbarra no bloqueio.
+- `CORES_DE_ETIQUETA` vive em `primitivos.ts` porque D14 dá àquele arquivo a
+  posse de todo valor cru de cor — inclusive do que a aplicação grava no banco.
+  O nome não cita domínio porque `packages/ui` não conhece domínio (D8): é uma
+  paleta de etiqueta, e quem a usa para serviço é o painel.
+- "A partir de hoje" (6.5) é hoje **no fuso do estabelecimento**, não no do
+  servidor: às 22h em São Paulo já é o dia seguinte em UTC, e a grade passaria a
+  valer um dia depois do que o gestor viu na tela.
+- Alterar a grade apaga o que foi criado hoje antes de fechar o que está aberto.
+  Corrigir um erro de digitação não é uma versão da grade, e a ordem é o que
+  impede a versão anterior de ser fechada duas vezes.
+- Sobreposição de faixas no mesmo dia é recusada **no contrato**, não só no
+  servidor: o formulário aponta a linha errada antes de enviar. Duas faixas
+  sobrepostas fariam o motor somar o intervalo comum duas vezes, e o mesmo
+  horário apareceria repetido para o cliente.
+- **Não existe cadastro aberto de gestor** (2.2, decidido durante a etapa 7). O
+  sistema é alugado: a plataforma provisiona o tenant e convida o proprietário,
+  que a partir daí convida a própria equipe. As rotas `/auth/cadastro`,
+  `/auth/verificar-email` e `/auth/reenviar-verificacao` foram removidas, e o
+  template de verificação junto — o aceite do convite já verifica o e-mail.
+- Provisionar é **linha de comando**, não rota: `estabelecimentos` fica sem
+  política de inserção, que teria de ser aberta para funcionar, e a conexão é a
+  do dono do banco. Interface de super admin é superfície que só a plataforma
+  usaria, e a v1 não a tem.
+- O enum `finalidade_verificacao` do banco guarda `VERIFICACAO_EMAIL`, que nada
+  emite hoje. Fica para o cadastro **opcional do cliente**, na etapa 11 — tirá-lo
+  exigiria migração de tipo para devolvê-lo depois. A união em TypeScript não o
+  traz, então nada o escreve por engano.
+- O painel ganhou `/convite`, `/recuperacao` e `/nova-senha`. Sem elas os links
+  dos e-mails caíam em rota inexistente — e, sem cadastro aberto, `/convite` é a
+  **única** porta de entrada do sistema.
+- **O painel é mobile-first** (D27, design v1.2). Toda tela nasce em ~390px e
+  cresce; o desktop ganha largura, não uma segunda interface. Um único ponto de
+  virada, `md` (768px), e ele **não** vira token — é o padrão do Tailwind (D30).
+- Densidade e largura são eixos diferentes: `data-densidade` continua sendo
+  atributo de raiz, com **duas** densidades, e a variação por aparelho é resolvida
+  por `@media` dentro de `densidade.css` e `tailwind.css`. Trocar o atributo em
+  tempo de execução tornaria densidade um estado, e traria `--largura-conteudo:
+  480px` junto, que é errado numa listagem de painel.
+- O piso de 16px em campo (D16) é escopado por **ponteiro grosseiro**, não por
+  aplicação nem largura. Escopado ao público, deixou todo campo do painel dando
+  zoom no iPhone por três etapas — e nenhum lint, tipo ou revisão pegou, porque
+  só aparece em dispositivo. Há teste de string em `tokens.teste.ts` guardando.
+- A navegação do celular tem três destinos e um "Menu" em `FolhaInferior` (D28).
+  Barra e folha derivam da **mesma** lista em `componentes/navegacao/itens.ts`, e
+  há teste provando que nenhuma tela fica fora das duas: no desktop a lateral
+  continua mostrando tudo, então o buraco não apareceria sozinho.
+- `ListaOuTabela` é a **única** forma de listagem do painel (D29): as colunas são
+  dado, e tabela ou cartão é escolha de CSS dentro do componente. `conteudo(item)`
+  é chamada duas vezes por item e precisa ser pura. Dois blocos irmãos no chamador
+  fariam a formatação de cada célula existir duas vezes, e a segunda nunca é vista.
+- A grade de horários é agrupada por dia, não por faixa, mas o `useFieldArray`
+  continua sobre a lista plana — o agrupamento é só de renderização, e os caminhos
+  de erro seguem o índice global. `fields[i].diaSemana` é instantâneo do valor
+  padrão, o que normalmente é armadilha do react-hook-form; aqui é seguro porque o
+  dia deixou de ser editável e só muda em `append` ou `remove`.
+- `/clientes` e `/caixa` estão na barra inferior e **respondem 404** até as etapas
+  10 e 13. Decisão consciente: a barra nasce na forma final para não trocar depois.
 
 ## Decisões ainda abertas
 
@@ -254,12 +365,10 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
 
 | Lacuna | Vence na |
 |---|---|
-| `slug` sem regra de validação nem lista de reservados — `app`, `auth`, `api` e `envio` são endereços do sistema | Etapa 7/8 |
 | `segmento` sem lista fechada, embora a janela de agendamento seja sugerida por segmento (6.6) | Etapa 8 |
 | Rate limit de `slots` e `dias_com_vaga` — provisório em 60/min e 30/min | Etapa 11 |
 | `token_gestao_expira_em` definido como "alguns dias" — não implementável | Etapa 11 |
 | Como testar `{slug}.dominio.com` localmente (hosts do Windows não aceita curinga) | Etapa 11 |
-| Criar estabelecimento antes de existir contexto de tenant — a RLS de `estabelecimentos` cobre leitura e alteração, não criação | Etapa 8 |
 | "Existência de ocupação" é mais estrito do que GRANT de coluna expressa; pede view com `security_invoker`, que é o que fixa o piso do Postgres em 15 | Etapa 11 |
 | Expurgo da auditoria atravessa tenants, e a RLS o zera — decidir entre papel dono e laço por tenant | Etapa 12 |
 | Hospedagem — recomendação em `docs/operacao.md` §2, decisão em aberto por §2.5 | Etapa 14 |

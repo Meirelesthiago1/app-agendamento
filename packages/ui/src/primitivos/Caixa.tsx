@@ -1,6 +1,6 @@
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { type ComponentPropsWithoutRef, forwardRef } from 'react';
-import { IconeConfirmar, IconeDiminuir } from '../icones/index.ts';
+import { IconeConfirmar, IconeMenos } from '../icones/index.ts';
 import { juntarClasses } from '../lib/juntar-classes.ts';
 
 export type PropsDaCaixa = ComponentPropsWithoutRef<typeof Checkbox.Root>;
@@ -26,7 +26,7 @@ export const Caixa = forwardRef<HTMLButtonElement, PropsDaCaixa>(function Caixa(
     >
       <Checkbox.Indicator className="text-acao-conteudo">
         {props.checked === 'indeterminate' ? (
-          <IconeDiminuir aria-hidden className="size-3.5" />
+          <IconeMenos aria-hidden className="size-3.5" />
         ) : (
           <IconeConfirmar aria-hidden className="size-3.5" />
         )}
