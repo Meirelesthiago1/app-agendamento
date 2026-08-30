@@ -3,7 +3,6 @@ import {
   AreaTexto,
   Avatar,
   Aviso,
-  BarraDeAcoes,
   Botao,
   BotaoIcone,
   CabecalhoTela,
@@ -13,17 +12,24 @@ import {
   Dialogo,
   Entrada,
   Esqueleto,
+  FechamentoDaFolha,
+  FolhaInferior,
+  GatilhoDaFolha,
   GatilhoDoDialogo,
-  IconeCalendarioVazio,
   IconeEditar,
   IconeRemover,
-  ListaVazia,
+  RaizDaFolha,
   RaizDoDialogo,
   Selecao,
   Selo,
   Separador,
 } from '@agendamento/ui';
 import type { ReactNode } from 'react';
+
+const HORAS_DO_DIA = Array.from(
+  { length: 14 },
+  (_, indice) => `${String(8 + indice).padStart(2, '0')}:00`,
+);
 
 /** Os sete estados de 4.3. Este é o critério de pronto de um componente. */
 const ESTADOS = [
@@ -171,6 +177,16 @@ export function Primitivos() {
 
         <Separador />
 
+        <Linha rotulo="rótulo oculto — para lista repetida, onde o cabeçalho já nomeia">
+          <Campo rotulo="Início do intervalo 1" rotuloOculto className="w-28">
+            {(ligacao) => <Entrada {...ligacao} defaultValue="08:00" />}
+          </Campo>
+          <span className="text-xs text-conteudo-suave">às</span>
+          <Campo rotulo="Fim do intervalo 1" rotuloOculto className="w-28">
+            {(ligacao) => <Entrada {...ligacao} defaultValue="12:00" />}
+          </Campo>
+        </Linha>
+
         <Linha rotulo="foco">
           <div data-forcar="foco">
             <Entrada defaultValue="Com anel de foco" />
@@ -270,20 +286,42 @@ export function Primitivos() {
         </RaizDoDialogo>
       </Secao>
 
-      <Secao titulo="ListaVazia" nota="A receita fixa de 6.5, sem ilustração">
-        <ListaVazia
-          icone={IconeCalendarioVazio}
-          titulo="Nenhum agendamento hoje"
-          apoio="Quando alguém agendar pelo seu link, aparece aqui."
-          acao={<Botao variante="suave">Criar agendamento</Botao>}
-        />
-      </Secao>
+      <Secao
+        titulo="FolhaInferior"
+        nota="Contêiner, não controle: os sete estados de 4.3 pertencem ao gatilho e às linhas. O que se confere aqui é outra coisa — as duas densidades, o corpo longo rolando dentro do miolo com cabeçalho e rodapé parados, o recuo da barra de gestos no perfil de iPhone, e o foco preso com devolução ao gatilho no Escape."
+      >
+        <RaizDaFolha>
+          <GatilhoDaFolha asChild>
+            <Botao variante="contorno">Abrir folha</Botao>
+          </GatilhoDaFolha>
 
-      <Secao titulo="BarraDeAcoes" nota="O rodapé padrão do público">
-        <BarraDeAcoes className="rounded-md border">
-          <span className="text-sm text-conteudo-suave">Total: R$ 50,00</span>
-          <Botao className="ml-auto">Continuar</Botao>
-        </BarraDeAcoes>
+          <FolhaInferior
+            titulo="Bloquear o dia"
+            descricao="Três agendamentos serão atingidos."
+            rodape={
+              <div className="flex flex-col gap-2">
+                <Botao variante="destrutiva" larguraTotal>
+                  Cancelar todos e avisar
+                </Botao>
+                <FechamentoDaFolha asChild>
+                  <Botao variante="fantasma" larguraTotal>
+                    Resolver um a um
+                  </Botao>
+                </FechamentoDaFolha>
+              </div>
+            }
+          >
+            {/* Longa de propósito: é o corpo rolando que se confere aqui */}
+            <ul className="flex flex-col divide-y divide-borda">
+              {HORAS_DO_DIA.map((hora, indice) => (
+                <li key={hora} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <span className="text-conteudo">Atendimento {indice + 1}</span>
+                  <span className="tabular-nums text-conteudo-suave">{hora}</span>
+                </li>
+              ))}
+            </ul>
+          </FolhaInferior>
+        </RaizDaFolha>
       </Secao>
     </>
   );

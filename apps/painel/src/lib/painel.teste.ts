@@ -1,4 +1,10 @@
 import { describe, expect, test } from 'vitest';
+import {
+  itensDaBarra,
+  itensDoMenu,
+  NA_BARRA_INFERIOR,
+  NAVEGACAO,
+} from '../componentes/navegacao/itens.ts';
 import { CHAVES_GLOBAIS, chavesDe, ehChaveEscopada } from './chaves.ts';
 import {
   chaveDosParametros,
@@ -107,5 +113,38 @@ describe('parâmetros de tabela na URL', () => {
 
   test('sentido fora do enum é recusado, em vez de virar consulta inválida', () => {
     expect(parametrosDeTabela.safeParse({ sentido: 'lateral' }).success).toBe(false);
+  });
+});
+
+/**
+ * A barra do celular mostra três (D28), e o resto vive no menu. O defeito que
+ * estes testes previnem é concreto: alguém acrescenta uma tela em `NAVEGACAO`,
+ * ela não entra em nenhum dos dois, e some **em silêncio** — porque no desktop
+ * a barra lateral continua mostrando, e é lá que se desenvolve.
+ */
+describe('navegação do painel', () => {
+  test('nenhuma tela fica sem caminho no celular', () => {
+    const alcancaveis = [...itensDaBarra(), ...itensDoMenu()].map((item) => item.para).sort();
+
+    expect(alcancaveis).toEqual(NAVEGACAO.map((item) => item.para).sort());
+  });
+
+  test('e nenhuma aparece nos dois lugares', () => {
+    const naBarra = new Set(itensDaBarra().map((item) => item.para));
+
+    expect(itensDoMenu().some((item) => naBarra.has(item.para))).toBe(false);
+  });
+
+  test('são três na barra, porque a quarta célula é o Menu', () => {
+    expect(itensDaBarra()).toHaveLength(3);
+  });
+
+  /** Um caminho com erro de digitação vira célula que some, não erro. */
+  test('todo caminho da barra existe na navegação', () => {
+    const conhecidos = new Set(NAVEGACAO.map((item) => item.para));
+
+    for (const para of NA_BARRA_INFERIOR) {
+      expect(conhecidos.has(para), para).toBe(true);
+    }
   });
 });

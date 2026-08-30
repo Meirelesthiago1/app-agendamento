@@ -1,6 +1,5 @@
 import {
   aplicarErrosServidor,
-  type FaixaDeTrabalho,
   type GradeDoProfissional,
   gradeSemanal,
 } from '@agendamento/contratos';
@@ -15,7 +14,6 @@ import {
   IconeMais,
   IconeRemover,
   minutosDeHora,
-  Selecao,
 } from '@agendamento/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -24,8 +22,26 @@ import { useDefinirGrade } from '../../lib/horarios.ts';
 /** 0 = domingo, como a coluna guarda (8.5). */
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const;
 
-const PADRAO: FaixaDeTrabalho = { diaSemana: 1, horaInicio: '09:00', horaFim: '18:00' };
+const FAIXA_PADRAO = { horaInicio: '09:00', horaFim: '18:00' };
 
+/**
+ * Agrupada por dia, e não por faixa. Duas razões:
+ *
+ * A aritmética — com o seletor de dia em cada linha, a faixa pedia 392px numa
+ * tela de 358px úteis, quebrava em três linhas e não sobrava separação entre uma
+ * faixa e a seguinte. Sem ele, a linha cabe inteira.
+ *
+ * E o modelo mental: "segunda, 08–12 e 13–18" é como o gestor pensa. A lista
+ * plana era a estrutura da tabela vazando para a tela.
+ *
+ * **O contrato não muda.** `useFieldArray` continua sobre a lista plana, e o
+ * agrupamento é só de renderização — os caminhos de erro seguem
+ * `faixas.<índice global>`, então a recusa de sobreposição do contrato continua
+ * acendendo a linha certa. `fields[i].diaSemana` é o instantâneo do valor
+ * padrão, o que normalmente é armadilha do react-hook-form; aqui é seguro
+ * porque o dia deixou de ser editável e só muda em `append` ou `remove`, que
+ * remontam `fields`.
+ */
 export function GradeSemanalDoProfissional({ grade }: { grade: GradeDoProfissional }) {
   const salvar = useDefinirGrade();
 
@@ -67,107 +83,99 @@ export function GradeSemanalDoProfissional({ grade }: { grade: GradeDoProfission
         </Aviso>
       ) : null}
 
-      <Cartao className="flex flex-col gap-3">
-        {fields.length === 0 ? (
-          <p className="text-sm text-conteudo-suave">
-            Sem horário definido — esta pessoa não recebe agendamentos.
-          </p>
-        ) : null}
+      <Cartao className="flex flex-col divide-y divide-borda p-0">
+        {DIAS.map((nomeDoDia, diaSemana) => {
+          // Preserva o índice global: é ele que o caminho do erro usa
+          const doDia = fields
+            .map((campo, indice) => ({ campo, indice }))
+            .filter(({ campo }) => campo.diaSemana === diaSemana);
 
-        {fields.map((campo, indice) => (
-          <div key={campo.id} className="flex flex-wrap items-end gap-2">
-            <Campo
-              rotulo="Dia"
-              className="min-w-36 flex-1"
-              erro={errors.faixas?.[indice]?.diaSemana?.message}
-            >
-              {(ligacao) => (
-                <Controller
-                  control={control}
-                  name={`faixas.${indice}.diaSemana`}
-                  render={({ field }) => (
-                    <Selecao
-                      {...ligacao}
-                      value={field.value}
-                      onChange={(evento) => field.onChange(Number(evento.target.value))}
-                    >
-                      {DIAS.map((dia, numero) => (
-                        <option key={dia} value={numero}>
-                          {dia}
-                        </option>
-                      ))}
-                    </Selecao>
-                  )}
-                />
-              )}
-            </Campo>
+          return (
+            <section key={nomeDoDia} className="flex flex-col gap-2 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <h3 className="flex-1 text-sm font-medium text-conteudo">{nomeDoDia}</h3>
 
-            <Campo
-              rotulo="Das"
-              className="w-28"
-              erro={errors.faixas?.[indice]?.horaInicio?.message}
-            >
-              {(ligacao) => (
-                <Controller
-                  control={control}
-                  name={`faixas.${indice}.horaInicio`}
-                  render={({ field }) => (
-                    <EntradaHora
-                      {...ligacao}
-                      value={minutosDeHora(field.value)}
-                      onChange={(minutos) =>
-                        field.onChange(minutos === null ? '' : horaDeMinutos(minutos))
-                      }
-                      onBlur={field.onBlur}
-                    />
-                  )}
-                />
-              )}
-            </Campo>
+                {doDia.length === 0 ? (
+                  <span className="text-xs text-conteudo-tenue">não atende</span>
+                ) : null}
 
-            <Campo rotulo="Às" className="w-28" erro={errors.faixas?.[indice]?.horaFim?.message}>
-              {(ligacao) => (
-                <Controller
-                  control={control}
-                  name={`faixas.${indice}.horaFim`}
-                  render={({ field }) => (
-                    <EntradaHora
-                      {...ligacao}
-                      value={minutosDeHora(field.value)}
-                      onChange={(minutos) =>
-                        field.onChange(minutos === null ? '' : horaDeMinutos(minutos))
-                      }
-                      onBlur={field.onBlur}
-                    />
-                  )}
-                />
-              )}
-            </Campo>
+                <BotaoIcone
+                  rotulo={`Adicionar intervalo na ${nomeDoDia.toLowerCase()}`}
+                  variante="contorno"
+                  tamanho="pequeno"
+                  onClick={() => append({ diaSemana, ...FAIXA_PADRAO })}
+                >
+                  <IconeMais aria-hidden className="size-4" />
+                </BotaoIcone>
+              </div>
 
-            <BotaoIcone
-              rotulo={`Remover o intervalo ${indice + 1}`}
-              variante="contorno"
-              onClick={() => remove(indice)}
-              className="mb-0.5"
-            >
-              <IconeRemover aria-hidden className="size-4" />
-            </BotaoIcone>
-          </div>
-        ))}
+              {doDia.map(({ campo, indice }) => (
+                <div key={campo.id} className="flex items-end gap-2">
+                  <Campo
+                    rotulo={`Início do intervalo ${indice + 1}`}
+                    rotuloOculto
+                    className="w-24"
+                    erro={errors.faixas?.[indice]?.horaInicio?.message}
+                  >
+                    {(ligacao) => (
+                      <Controller
+                        control={control}
+                        name={`faixas.${indice}.horaInicio`}
+                        render={({ field }) => (
+                          <EntradaHora
+                            {...ligacao}
+                            value={minutosDeHora(field.value)}
+                            onChange={(minutos) =>
+                              field.onChange(minutos === null ? '' : horaDeMinutos(minutos))
+                            }
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      />
+                    )}
+                  </Campo>
 
-        <div>
-          <Botao
-            variante="contorno"
-            tamanho="pequeno"
-            onClick={() => append(fields.length === 0 ? PADRAO : { ...PADRAO })}
-          >
-            <IconeMais aria-hidden className="size-4" />
-            Adicionar intervalo
-          </Botao>
-        </div>
+                  <span className="pb-2 text-xs text-conteudo-suave">às</span>
+
+                  <Campo
+                    rotulo={`Fim do intervalo ${indice + 1}`}
+                    rotuloOculto
+                    className="w-24"
+                    erro={errors.faixas?.[indice]?.horaFim?.message}
+                  >
+                    {(ligacao) => (
+                      <Controller
+                        control={control}
+                        name={`faixas.${indice}.horaFim`}
+                        render={({ field }) => (
+                          <EntradaHora
+                            {...ligacao}
+                            value={minutosDeHora(field.value)}
+                            onChange={(minutos) =>
+                              field.onChange(minutos === null ? '' : horaDeMinutos(minutos))
+                            }
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      />
+                    )}
+                  </Campo>
+
+                  <BotaoIcone
+                    rotulo={`Remover o intervalo ${indice + 1}`}
+                    variante="fantasma"
+                    onClick={() => remove(indice)}
+                  >
+                    <IconeRemover aria-hidden className="size-4" />
+                  </BotaoIcone>
+                </div>
+              ))}
+            </section>
+          );
+        })}
       </Cartao>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-conteudo-suave">
           {grade.vigenciaInicio === null
             ? 'Ainda sem horário.'

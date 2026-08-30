@@ -16,6 +16,7 @@ export * from './EntradaHora.tsx';
 export * from './EntradaMascarada.tsx';
 export * from './EntradaMoeda.tsx';
 export * from './Esqueleto.tsx';
+export * from './FolhaInferior.tsx';
 export * from './MenuSuspenso.tsx';
 export * from './mascaras.ts';
 export * from './Paginacao.tsx';

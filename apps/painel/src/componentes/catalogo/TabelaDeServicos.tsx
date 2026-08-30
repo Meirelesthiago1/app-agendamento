@@ -1,24 +1,19 @@
 import { type Categoria, eErroDaApi, type ServicoDoPainel } from '@agendamento/contratos';
 import {
   BotaoIcone,
-  CabecalhoDaTabela,
-  Celula,
-  Coluna,
   Confirmacao,
   ConteudoDoMenu,
-  CorpoDaTabela,
   formatarDuracao,
   formatarMoeda,
   GatilhoDoMenu,
   IconeLoja,
   IconeReticencias,
   ItemDoMenu,
-  LinhaDaTabela,
+  ListaOuTabela,
   ListaVazia,
   MenuSuspenso,
   Selo,
   SeparadorDoMenu,
-  Tabela,
 } from '@agendamento/ui';
 import { useState } from 'react';
 import { useDefinirServicoAtivo } from '../../lib/catalogo.ts';
@@ -108,83 +103,90 @@ export function TabelaDeServicos({ servicos, categorias, aoEditar }: PropsDaTabe
         />
       )}
 
-      <Tabela>
-        <CabecalhoDaTabela>
-          <LinhaDaTabela>
-            <Coluna>Serviço</Coluna>
-            <Coluna>Categoria</Coluna>
-            <Coluna numerica>Duração</Coluna>
-            <Coluna numerica>Valor</Coluna>
-            <Coluna>Situação</Coluna>
-            <Coluna className="w-10">
-              <span className="sr-only">Ações</span>
-            </Coluna>
-          </LinhaDaTabela>
-        </CabecalhoDaTabela>
-
-        <CorpoDaTabela>
-          {servicos.map((servico) => (
-            <LinhaDaTabela key={servico.id}>
-              <Celula>
-                <div className="flex items-center gap-2">
-                  {servico.cor === null ? null : (
-                    <span
-                      aria-hidden
-                      // A cor vem do dado, em tempo de execução: não há classe
-                      style={{ backgroundColor: servico.cor }}
-                      className="size-2.5 shrink-0 rounded-completo"
-                    />
-                  )}
-                  {servico.nome}
-                </div>
-              </Celula>
-
-              <Celula className="text-conteudo-suave">
-                {nomeDaCategoria(servico.categoriaId)}
-              </Celula>
-              <Celula numerica>{formatarDuracao(servico.duracaoMin)}</Celula>
-              <Celula numerica>{valorEmTexto(servico)}</Celula>
-
-              <Celula>
-                {servico.ativo ? (
-                  <Selo tom="positivo">Ativo</Selo>
-                ) : (
-                  <Selo tom="neutro">Inativo</Selo>
+      <ListaOuTabela
+        itens={servicos}
+        chaveDoItem={(servico) => servico.id}
+        colunas={[
+          {
+            chave: 'nome',
+            rotulo: 'Serviço',
+            principal: true,
+            conteudo: (servico) => (
+              <span className="flex items-center gap-2">
+                {servico.cor === null ? null : (
+                  <span
+                    aria-hidden
+                    // A cor vem do dado, em tempo de execução: não há classe
+                    style={{ backgroundColor: servico.cor }}
+                    className="size-2.5 shrink-0 rounded-completo"
+                  />
                 )}
-              </Celula>
+                {servico.nome}
+              </span>
+            ),
+          },
+          {
+            chave: 'categoria',
+            rotulo: 'Categoria',
+            // No cartão o agrupamento não vale a linha que ocuparia
+            soNaTabela: true,
+            conteudo: (servico) => (
+              <span className="text-conteudo-suave">{nomeDaCategoria(servico.categoriaId)}</span>
+            ),
+          },
+          {
+            chave: 'duracao',
+            rotulo: 'Duração',
+            numerica: true,
+            conteudo: (servico) => formatarDuracao(servico.duracaoMin),
+          },
+          {
+            chave: 'valor',
+            rotulo: 'Valor',
+            numerica: true,
+            conteudo: (servico) => valorEmTexto(servico),
+          },
+          {
+            chave: 'situacao',
+            rotulo: 'Situação',
+            conteudo: (servico) =>
+              servico.ativo ? <Selo tom="positivo">Ativo</Selo> : <Selo tom="neutro">Inativo</Selo>,
+          },
+          {
+            chave: 'acoes',
+            rotulo: 'Ações',
+            fixada: true,
+            conteudo: (servico) => (
+              <MenuSuspenso>
+                <GatilhoDoMenu asChild>
+                  <BotaoIcone rotulo={`Ações de ${servico.nome}`} tamanho="pequeno">
+                    <IconeReticencias aria-hidden className="size-4" />
+                  </BotaoIcone>
+                </GatilhoDoMenu>
 
-              <Celula>
-                <MenuSuspenso>
-                  <GatilhoDoMenu asChild>
-                    <BotaoIcone rotulo={`Ações de ${servico.nome}`} tamanho="pequeno">
-                      <IconeReticencias aria-hidden className="size-4" />
-                    </BotaoIcone>
-                  </GatilhoDoMenu>
+                <ConteudoDoMenu align="end">
+                  <ItemDoMenu onSelect={() => aoEditar(servico)}>Editar</ItemDoMenu>
+                  <SeparadorDoMenu />
 
-                  <ConteudoDoMenu align="end">
-                    <ItemDoMenu onSelect={() => aoEditar(servico)}>Editar</ItemDoMenu>
-                    <SeparadorDoMenu />
-
-                    {servico.ativo ? (
-                      <ItemDoMenu tom="negativo" onSelect={() => definirADesativar(servico)}>
-                        Desativar
-                      </ItemDoMenu>
-                    ) : (
-                      <ItemDoMenu
-                        onSelect={() =>
-                          void definirAtivo.mutateAsync({ id: servico.id, ativo: true })
-                        }
-                      >
-                        Reativar
-                      </ItemDoMenu>
-                    )}
-                  </ConteudoDoMenu>
-                </MenuSuspenso>
-              </Celula>
-            </LinhaDaTabela>
-          ))}
-        </CorpoDaTabela>
-      </Tabela>
+                  {servico.ativo ? (
+                    <ItemDoMenu tom="negativo" onSelect={() => definirADesativar(servico)}>
+                      Desativar
+                    </ItemDoMenu>
+                  ) : (
+                    <ItemDoMenu
+                      onSelect={() =>
+                        void definirAtivo.mutateAsync({ id: servico.id, ativo: true })
+                      }
+                    >
+                      Reativar
+                    </ItemDoMenu>
+                  )}
+                </ConteudoDoMenu>
+              </MenuSuspenso>
+            ),
+          },
+        ]}
+      />
     </>
   );
 }

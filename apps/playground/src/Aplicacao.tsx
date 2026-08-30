@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { BarraDoPlayground, type Densidade, type Tema } from './BarraDoPlayground.tsx';
 import { Formularios } from './telas/Formularios.tsx';
 import { Marca } from './telas/Marca.tsx';
+import { Padroes } from './telas/Padroes.tsx';
 import { Primitivos } from './telas/Primitivos.tsx';
 import { Tokens } from './telas/Tokens.tsx';
 
@@ -10,6 +11,7 @@ const TELAS = {
   tokens: Tokens,
   primitivos: Primitivos,
   formularios: Formularios,
+  padroes: Padroes,
   marca: Marca,
 } as const;
 

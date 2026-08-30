@@ -5,25 +5,20 @@ import {
   Avatar,
   Botao,
   BotaoIcone,
-  CabecalhoDaTabela,
   CabecalhoTela,
   Cartao,
-  Celula,
-  Coluna,
   Confirmacao,
   ConteudoDoMenu,
-  CorpoDaTabela,
   Esqueleto,
   GatilhoDoMenu,
   IconeReticencias,
   ItemDoMenu,
-  LinhaDaTabela,
   ListaDeAbas,
+  ListaOuTabela,
   MenuSuspenso,
   PainelDaAba,
   Selo,
   SeparadorDoMenu,
-  Tabela,
 } from '@agendamento/ui';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -139,135 +134,149 @@ function TelaDaEquipe() {
 
             <PainelDaAba value="profissionais">
               <Cartao className="p-0">
-                <Tabela>
-                  <CabecalhoDaTabela>
-                    <LinhaDaTabela>
-                      <Coluna>Pessoa</Coluna>
-                      <Coluna numerica>Serviços</Coluna>
-                      <Coluna>Acesso</Coluna>
-                      <Coluna>Situação</Coluna>
-                      <Coluna className="w-10">
-                        <span className="sr-only">Ações</span>
-                      </Coluna>
-                    </LinhaDaTabela>
-                  </CabecalhoDaTabela>
-
-                  <CorpoDaTabela>
-                    {equipe.profissionais.map((membro) => (
-                      <LinhaDaTabela key={membro.id}>
-                        <Celula>
-                          <div className="flex items-center gap-2">
-                            <Avatar nome={membro.nomeExibicao} tamanho="pequeno" />
-                            {membro.nomeExibicao}
-                          </div>
-                        </Celula>
-
-                        <Celula numerica>{membro.servicos.length}</Celula>
-
-                        <Celula className="text-conteudo-suave">
+                <ListaOuTabela
+                  itens={equipe.profissionais}
+                  chaveDoItem={(membro) => membro.id}
+                  colunas={[
+                    {
+                      chave: 'pessoa',
+                      rotulo: 'Pessoa',
+                      principal: true,
+                      conteudo: (membro) => (
+                        <span className="flex items-center gap-2">
+                          <Avatar nome={membro.nomeExibicao} tamanho="pequeno" />
+                          {membro.nomeExibicao}
+                        </span>
+                      ),
+                    },
+                    {
+                      chave: 'servicos',
+                      rotulo: 'Serviços',
+                      numerica: true,
+                      conteudo: (membro) => membro.servicos.length,
+                    },
+                    {
+                      chave: 'acesso',
+                      rotulo: 'Acesso',
+                      conteudo: (membro) => (
+                        <span className="text-conteudo-suave">
                           {membro.vinculoId === null
                             ? 'Sem login'
                             : (equipe.acessos.find((a) => a.vinculoId === membro.vinculoId)
                                 ?.email ?? '—')}
-                        </Celula>
+                        </span>
+                      ),
+                    },
+                    {
+                      chave: 'situacao',
+                      rotulo: 'Situação',
+                      conteudo: (membro) =>
+                        membro.ativo ? (
+                          <Selo tom="positivo">Ativo</Selo>
+                        ) : (
+                          <Selo tom="neutro">Inativo</Selo>
+                        ),
+                    },
+                    {
+                      chave: 'acoes',
+                      rotulo: 'Ações',
+                      fixada: true,
+                      conteudo: (membro) => (
+                        <MenuSuspenso>
+                          <GatilhoDoMenu asChild>
+                            <BotaoIcone
+                              rotulo={`Ações de ${membro.nomeExibicao}`}
+                              tamanho="pequeno"
+                            >
+                              <IconeReticencias aria-hidden className="size-4" />
+                            </BotaoIcone>
+                          </GatilhoDoMenu>
 
-                        <Celula>
-                          {membro.ativo ? (
-                            <Selo tom="positivo">Ativo</Selo>
-                          ) : (
-                            <Selo tom="neutro">Inativo</Selo>
-                          )}
-                        </Celula>
+                          <ConteudoDoMenu align="end">
+                            <ItemDoMenu
+                              onSelect={() => {
+                                definirEmEdicao(membro);
+                                definirFormularioAberto(true);
+                              }}
+                            >
+                              Editar
+                            </ItemDoMenu>
 
-                        <Celula>
-                          <MenuSuspenso>
-                            <GatilhoDoMenu asChild>
-                              <BotaoIcone
-                                rotulo={`Ações de ${membro.nomeExibicao}`}
-                                tamanho="pequeno"
-                              >
-                                <IconeReticencias aria-hidden className="size-4" />
-                              </BotaoIcone>
-                            </GatilhoDoMenu>
+                            <ItemDoMenu onSelect={() => definirServicosDe(membro)}>
+                              Serviços que atende
+                            </ItemDoMenu>
 
-                            <ConteudoDoMenu align="end">
+                            <SeparadorDoMenu />
+
+                            {membro.ativo ? (
+                              <ItemDoMenu tom="negativo" onSelect={() => definirADesativar(membro)}>
+                                Desativar
+                              </ItemDoMenu>
+                            ) : (
                               <ItemDoMenu
-                                onSelect={() => {
-                                  definirEmEdicao(membro);
-                                  definirFormularioAberto(true);
-                                }}
+                                onSelect={() =>
+                                  void definirAtivo.mutateAsync({ id: membro.id, ativo: true })
+                                }
                               >
-                                Editar
+                                Reativar
                               </ItemDoMenu>
-
-                              <ItemDoMenu onSelect={() => definirServicosDe(membro)}>
-                                Serviços que atende
-                              </ItemDoMenu>
-
-                              <SeparadorDoMenu />
-
-                              {membro.ativo ? (
-                                <ItemDoMenu
-                                  tom="negativo"
-                                  onSelect={() => definirADesativar(membro)}
-                                >
-                                  Desativar
-                                </ItemDoMenu>
-                              ) : (
-                                <ItemDoMenu
-                                  onSelect={() =>
-                                    void definirAtivo.mutateAsync({ id: membro.id, ativo: true })
-                                  }
-                                >
-                                  Reativar
-                                </ItemDoMenu>
-                              )}
-                            </ConteudoDoMenu>
-                          </MenuSuspenso>
-                        </Celula>
-                      </LinhaDaTabela>
-                    ))}
-                  </CorpoDaTabela>
-                </Tabela>
+                            )}
+                          </ConteudoDoMenu>
+                        </MenuSuspenso>
+                      ),
+                    },
+                  ]}
+                />
               </Cartao>
             </PainelDaAba>
 
             <PainelDaAba value="acessos">
               <Cartao className="p-0">
-                <Tabela>
-                  <CabecalhoDaTabela>
-                    <LinhaDaTabela>
-                      <Coluna>Pessoa</Coluna>
-                      <Coluna>E-mail</Coluna>
-                      <Coluna>Papel</Coluna>
-                      <Coluna>Situação</Coluna>
-                      <Coluna>Atende?</Coluna>
-                    </LinhaDaTabela>
-                  </CabecalhoDaTabela>
-
-                  <CorpoDaTabela>
-                    {equipe.acessos.map((acesso) => (
-                      <LinhaDaTabela key={acesso.vinculoId}>
-                        <Celula>{acesso.nome}</Celula>
-                        <Celula className="text-conteudo-suave">{acesso.email}</Celula>
-                        <Celula>{ROTULO_DO_PAPEL[acesso.papel] ?? acesso.papel}</Celula>
-
-                        <Celula>
-                          <Selo tom={TOM_DO_STATUS[acesso.status]}>
-                            {ROTULO_DO_STATUS[acesso.status] ?? acesso.status}
-                          </Selo>
-                        </Celula>
-
-                        <Celula className="text-conteudo-suave">
+                <ListaOuTabela
+                  itens={equipe.acessos}
+                  chaveDoItem={(acesso) => acesso.vinculoId}
+                  colunas={[
+                    {
+                      chave: 'pessoa',
+                      rotulo: 'Pessoa',
+                      principal: true,
+                      conteudo: (acesso) => acesso.nome,
+                    },
+                    {
+                      chave: 'email',
+                      rotulo: 'E-mail',
+                      conteudo: (acesso) => (
+                        <span className="text-conteudo-suave">{acesso.email}</span>
+                      ),
+                    },
+                    {
+                      chave: 'papel',
+                      rotulo: 'Papel',
+                      conteudo: (acesso) => ROTULO_DO_PAPEL[acesso.papel] ?? acesso.papel,
+                    },
+                    {
+                      chave: 'situacao',
+                      rotulo: 'Situação',
+                      conteudo: (acesso) => (
+                        <Selo tom={TOM_DO_STATUS[acesso.status]}>
+                          {ROTULO_DO_STATUS[acesso.status] ?? acesso.status}
+                        </Selo>
+                      ),
+                    },
+                    {
+                      chave: 'atende',
+                      rotulo: 'Atende?',
+                      conteudo: (acesso) => (
+                        <span className="text-conteudo-suave">
                           {acesso.profissionalId === null
                             ? 'Não atende'
                             : (equipe.profissionais.find((p) => p.id === acesso.profissionalId)
                                 ?.nomeExibicao ?? '—')}
-                        </Celula>
-                      </LinhaDaTabela>
-                    ))}
-                  </CorpoDaTabela>
-                </Tabela>
+                        </span>
+                      ),
+                    },
+                  ]}
+                />
               </Cartao>
             </PainelDaAba>
           </Abas>

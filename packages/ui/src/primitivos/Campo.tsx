@@ -7,6 +7,13 @@ export type PropsDoCampo = {
   apoio?: string;
   erro?: string;
   obrigatorio?: boolean;
+  /**
+   * Esconde o rótulo visualmente, mantendo-o para leitor de tela. Para lista
+   * repetida, onde o rótulo já está no cabeçalho e repeti-lo em cada linha é
+   * ruído. Nunca é o mesmo que não ter rótulo: sem ele o campo perde nome, e a
+   * mensagem de erro perde a casa.
+   */
+  rotuloOculto?: boolean;
   className?: string;
   /**
    * Recebe o que o controle precisa para ficar ligado ao rótulo, ao apoio e ao
@@ -26,7 +33,15 @@ export type PropsDoCampo = {
  * apoio e erro, com a acessibilidade ligada num lugar só. Todo cadastro do
  * painel e todo passo do fluxo público passam por ele.
  */
-export function Campo({ rotulo, apoio, erro, obrigatorio, className, children }: PropsDoCampo) {
+export function Campo({
+  rotulo,
+  apoio,
+  erro,
+  obrigatorio,
+  rotuloOculto = false,
+  className,
+  children,
+}: PropsDoCampo) {
   const id = useId();
   const idDoApoio = `${id}-apoio`;
   const idDoErro = `${id}-erro`;
@@ -38,7 +53,10 @@ export function Campo({ rotulo, apoio, erro, obrigatorio, className, children }:
 
   return (
     <div className={juntarClasses('flex flex-col gap-1.5', className)}>
-      <label htmlFor={id} className="text-sm font-medium text-conteudo">
+      <label
+        htmlFor={id}
+        className={rotuloOculto ? 'sr-only' : 'text-sm font-medium text-conteudo'}
+      >
         {rotulo}
         {obrigatorio ? (
           <span aria-hidden className="ml-0.5 text-negativo">

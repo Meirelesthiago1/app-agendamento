@@ -28,7 +28,6 @@ import {
   Paginacao,
   PainelDaAba,
   Passo,
-  ResumoDeValor,
   SeletorCor,
   SeparadorDoMenu,
   Tabela,
@@ -272,49 +271,6 @@ export function Formularios() {
           destrutiva
           aoConfirmar={() => definirConfirmando(false)}
         />
-      </Secao>
-
-      <Secao
-        titulo="Resumo de valor"
-        nota="OCULTO não vira sob consulta (C10): a linha de valor simplesmente não existe."
-      >
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <span className="text-2xs font-medium uppercase tracking-wide text-conteudo-tenue">
-              todos com valor
-            </span>
-            <ResumoDeValor
-              itens={[
-                {
-                  nome: 'Corte masculino',
-                  duracaoMin: 30,
-                  valor: { tipo: 'FIXO', centavos: 4500 },
-                },
-                { nome: 'Barba', duracaoMin: 20, valor: { tipo: 'FIXO', centavos: 3000 } },
-              ]}
-              total={{ tipo: 'FIXO', centavos: 7500 }}
-              duracaoTotalMin={50}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className="text-2xs font-medium uppercase tracking-wide text-conteudo-tenue">
-              um item oculto contamina o total
-            </span>
-            <ResumoDeValor
-              itens={[
-                {
-                  nome: 'Corte masculino',
-                  duracaoMin: 30,
-                  valor: { tipo: 'FIXO', centavos: 4500 },
-                },
-                { nome: 'Coloração', duracaoMin: 90, valor: { tipo: 'OCULTO' } },
-              ]}
-              total={{ tipo: 'A_PARTIR_DE', centavos: 4500 }}
-              duracaoTotalMin={120}
-            />
-          </div>
-        </div>
       </Secao>
     </div>
   );

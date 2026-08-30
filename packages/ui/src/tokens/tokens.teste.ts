@@ -6,6 +6,7 @@ import { gerarPrimitivosCss } from './gerar.ts';
 import { ESTADOS, MARCA, NEUTROS, PRIMITIVOS } from './primitivos.ts';
 
 const CSS_GERADO = fileURLToPath(new URL('./primitivos.css', import.meta.url));
+const CSS_DO_TAILWIND = fileURLToPath(new URL('./tailwind.css', import.meta.url));
 
 describe('primitivos.css é gerado, não escrito', () => {
   test('o arquivo em disco confere com a fonte em TypeScript', () => {
@@ -19,6 +20,28 @@ describe('primitivos.css é gerado, não escrito', () => {
     for (const nome of Object.keys(PRIMITIVOS)) {
       expect(css).toContain(`--${nome}:`);
     }
+  });
+});
+
+/**
+ * D16 escopada ao público deixou **todo campo do painel** dando zoom no iPhone
+ * por três etapas, sem lint, tipo ou revisão pegarem — porque só aparece em
+ * dispositivo. É teste de string e uma reformatação do arquivo o quebra; ainda
+ * assim vale, pelo mesmo raciocínio de D14: convenção baseada em memória erode.
+ */
+describe('o piso de 16px em input vale nas duas aplicações (D16)', () => {
+  const css = readFileSync(CSS_DO_TAILWIND, 'utf8');
+
+  test('o piso existe', () => {
+    expect(css).toContain('max(1rem, var(--texto-corpo))');
+  });
+
+  test('e não está preso a uma densidade', () => {
+    expect(css).not.toContain('[data-densidade="confortavel"] :is(input');
+  });
+
+  test('o eixo é o ponteiro, que é o que alcança o painel no celular', () => {
+    expect(css).toContain('@media (pointer: coarse)');
   });
 });
 

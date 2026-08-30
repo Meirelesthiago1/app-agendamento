@@ -42,6 +42,10 @@ const LOTE_DA_ETAPA_7 = [
   'Paginacao',
   'Confirmacao',
   'ResumoDeValor',
+  // Puxados quando o painel virou mobile-first (D27): o menu de navegação
+  // precisa da folha, e toda listagem precisa virar cartão no celular
+  'FolhaInferior',
+  'ListaOuTabela',
 ] as const;
 
 describe('inventário do lote de fundação', () => {
@@ -51,7 +55,7 @@ describe('inventário do lote de fundação', () => {
     }
   });
 
-  test('os doze da etapa 7 também', () => {
+  test('os catorze da etapa 7 também', () => {
     for (const nome of LOTE_DA_ETAPA_7) {
       expect(ui, `falta ${nome}`).toHaveProperty(nome);
     }

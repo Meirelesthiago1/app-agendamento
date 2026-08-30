@@ -16,6 +16,7 @@ export {
   AlertCircle as IconeAlerta,
   AlertTriangle as IconeAtencao,
   ArrowLeft as IconeVoltar,
+  ArrowLeftRight as IconeTrocar,
   ArrowRight as IconeAvancar,
   Ban as IconeProibido,
   Calendar as IconeCalendario,
