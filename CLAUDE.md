@@ -130,10 +130,10 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | 4 — Design | `main` | Tokens em três camadas, `derivarPaleta` em OKLCH, os 18 componentes do lote de fundação, e o playground com `/tokens`, `/primitivos` e `/marca` |
 | 5 — Autenticação | `main` | argon2id, sessão opaca de 30 dias, os transacionais em React Email, convite de equipe e recuperação de senha |
 | 6 — Painel | `main` | Vite + TanStack Router/Query, guarda de rota, layout nas duas larguras, seletor de estabelecimento, `ControlePermissao` e estado de tabela na URL |
-| 7 — Configuração | `etapa-7-configuracao` | O lote de doze componentes, as doze chaves de 8.2, catálogo, equipe nas três combinações de 2.4, grade versionada por vigência e exceções |
-| 8 — Provisionamento | `etapa-7-configuracao` | `provisionarTenant` e a linha de comando; cadastro aberto removido; `/convite`, `/recuperacao` e `/nova-senha` no painel. **Falta o wizard de onboarding.** |
+| 7 — Configuração | `main` | O lote de doze componentes, as doze chaves de 8.2, catálogo, equipe nas três combinações de 2.4, grade versionada por vigência e exceções |
+| 8 — Provisionamento | `main` | `provisionarTenant` e a linha de comando; cadastro aberto removido; `/convite`, `/recuperacao` e `/nova-senha` no painel. **Falta o wizard de onboarding.** |
 
-**Fora da numeração das etapas, na mesma branch:** o painel virou mobile-first
+**Fora da numeração das etapas, junto com elas na `main`:** o painel virou mobile-first
 (D27), o que reescreveu o §1.1 do design para a **v1.2** e trouxe `FolhaInferior`
 e `ListaOuTabela` da etapa 9 para a 7. Veio de o usuário testar a etapa 7 no
 celular e apontar três coisas — barra com sete itens, tabela rolando para o lado,
