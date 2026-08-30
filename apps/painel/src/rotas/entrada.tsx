@@ -6,9 +6,11 @@ import { CHAVES_GLOBAIS } from '../lib/chaves.ts';
 import { buscarSessao, useEntrar } from '../lib/sessao.ts';
 
 export const Route = createFileRoute('/entrada')({
-  validateSearch: (busca: Record<string, unknown>) => ({
-    // Para onde voltar depois de entrar. Sem isto, quem clicou num link
-    // profundo cai na home e perde o que estava fazendo.
+  // O retorno é anotado com `?` de propósito: sem isso o roteador entende que
+  // `destino` está sempre presente e passa a exigir `search` em todo link para
+  // esta rota. Ele guarda para onde voltar depois de entrar — quem clicou num
+  // link profundo não pode cair na home e perder o que estava fazendo.
+  validateSearch: (busca: Record<string, unknown>): { destino?: string } => ({
     destino: typeof busca.destino === 'string' ? busca.destino : undefined,
   }),
   beforeLoad: async ({ context, search }) => {
@@ -86,9 +88,12 @@ function TelaDeEntrada() {
         </form>
       </Cartao>
 
+      {/* Não existe "criar conta": o tenant é provisionado pela plataforma, e
+          proprietário e equipe entram por convite (2.2) */}
       <p className="text-center text-sm text-conteudo-suave">
-        <Link to="/cadastro" className="underline">
-          Criar uma conta
+        Esqueceu a senha?{' '}
+        <Link to="/recuperacao" className="underline">
+          Receber um link por e-mail
         </Link>
       </p>
     </main>

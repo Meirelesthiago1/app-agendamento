@@ -1,10 +1,12 @@
 # Sistema de Agendamento Multi-Tenant — Plano de Implementação
 
-**Versão 1.2**
+**Versão 1.3**
 
 Roteiro de execução. Define a ordem das etapas, o que cada uma entrega e o critério que a declara pronta.
 
-**Entradas obrigatórias:** `planejamento-agendamento.md` (v1.4), `definicao-stack.md` (v1.2), `sistema-de-design.md` (v1.1), `conteudo-e-microcopia.md` (v1.0) e `operacao.md` (v1.0). Este documento não decide o que o sistema faz, nem com o que é construído, nem como se parece, nem o que escreve, nem onde roda. Decide apenas **em que ordem**, e por quê.
+> **Alteração da v1.2 para a v1.3:** a etapa 8 passou a nomear as duas metades de como um tenant nasce — provisionamento e onboarding —, porque não existe cadastro aberto de gestor (2.2). E `FolhaInferior` e `ListaOuTabela` passaram da etapa 9 para a 7 na tabela da seção 5, puxados pelo painel virar mobile-first (D27). Nenhuma etapa mudou de ordem nem de critério de pronto.
+
+**Entradas obrigatórias:** `planejamento-agendamento.md` (v1.4), `definicao-stack.md` (v1.2), `sistema-de-design.md` (v1.2), `conteudo-e-microcopia.md` (v1.0) e `operacao.md` (v1.0). Este documento não decide o que o sistema faz, nem com o que é construído, nem como se parece, nem o que escreve, nem onde roda. Decide apenas **em que ordem**, e por quê.
 
 Referências: `(5.1)` aponta para o funcional, `(T14)` para o stack, `(D6)` para o design, `(C7)` para o conteúdo, `(O13)` para a operação.
 
@@ -76,7 +78,7 @@ Ambas as aplicações nascem **network-first**, com service worker registrado e 
 | 5 | Autenticação e sessão | Usuários, vínculos, sessões, convite, e-mail | |
 | 6 | Casca do painel | Rotas, layout, guarda, permissão, cache por estabelecimento | |
 | 7 | Configuração, catálogo, equipe e horários | A primeira funcionalidade completa, ponta a ponta | |
-| 8 | Onboarding | Wizard de cinco passos, com link e QR ao final | |
+| 8 | Provisionamento e onboarding | Comando que cria o tenant e convida o dono; wizard de cinco passos, com link e QR ao final | |
 | 9 | Agenda do painel | Nove transições, quatro estados temporais, bloqueio em dois toques | |
 | 10 | Clientes | Cadastro, busca, histórico, bloqueio, reconciliação | |
 | 11 | Aplicação pública | Fluxo de sete etapas, marca do tenant, token de gestão | |
@@ -84,7 +86,7 @@ Ambas as aplicações nascem **network-first**, com service worker registrado e 
 | 13 | Caixa e Resumo | Livro append-only, estorno, três blocos, CSV | |
 | 14 | PWA e acabamento | Instalável nas duas, acessibilidade, telas de erro | |
 
-**Caminho mínimo para uma demonstração ponta a ponta:** 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 11. Ao final da 11, um gestor cria a conta, sai do onboarding com um link, e um cliente agenda por ele. É o menor conjunto que prova o produto, e vale como marco intermediário — sem caixa, sem lembrete, sem relatório.
+**Caminho mínimo para uma demonstração ponta a ponta:** 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 11. Ao final da 11, um tenant é provisionado, o gestor aceita o convite, sai do onboarding com um link, e um cliente agenda por ele. É o menor conjunto que prova o produto, e vale como marco intermediário — sem caixa, sem lembrete, sem relatório.
 
 ---
 
@@ -157,11 +159,11 @@ Mais o **lote de fundação** do inventário (6.1 e 6.2 do sistema de design): `
 
 ### Etapa 5 — Autenticação e sessão
 
-**Entrega.** `usuarios`, `vinculos`, `sessoes`. argon2id. Sessão opaca em tabela, com hash armazenado (T19), cookie no domínio pai com `HttpOnly`, `Secure` e `SameSite=Lax` (10.6). Convite de equipe por token, com `vinculos` nascendo `CONVIDADO` (10.2). Recuperação de senha. `EnviadorEmail` sobre Mailpit, com templates em React Email. Plugin de autenticação real, resolvendo usuário, vínculo e papel. A porta `CanalOtp` com a implementação `LOG`, atrás de variável de ambiente e **ausente do artefato de produção** (10.4, decisão 30).
+**Entrega.** `usuarios`, `vinculos`, `sessoes`. argon2id. Sessão opaca em tabela, com hash armazenado (T19), cookie no domínio pai com `HttpOnly`, `Secure` e `SameSite=Lax` (10.6). Convite por token, com `vinculos` nascendo `CONVIDADO` (10.2) — é como o proprietário e a equipe entram, já que não existe cadastro aberto de gestor (2.2). Recuperação de senha. `EnviadorEmail` sobre Mailpit, com templates em React Email. Plugin de autenticação real, resolvendo usuário, vínculo e papel. A porta `CanalOtp` com a implementação `LOG`, atrás de variável de ambiente e **ausente do artefato de produção** (10.4, decisão 30).
 
 Sem Google (seção 2).
 
-**Pronto quando:** cadastro → verificação de e-mail → sessão de 30 dias funciona; revogar uma linha de `sessoes` derruba o acesso imediatamente; o convite de equipe fecha o ciclo até `ATIVO`; e os e-mails aparecem no Mailpit.
+**Pronto quando:** o convite fecha o ciclo até `ATIVO` e resulta numa sessão de 30 dias; revogar uma linha de `sessoes` derruba o acesso imediatamente; recuperar a senha revoga todas as sessões; e os e-mails aparecem no Mailpit.
 
 ---
 
@@ -199,13 +201,19 @@ Sem Google (seção 2).
 
 ---
 
-### Etapa 8 — Onboarding
+### Etapa 8 — Provisionamento e onboarding
 
-**Entrega.** O wizard de cinco passos de 4.1: dados do negócio → horário de trabalho → primeiro serviço → bloqueios já conhecidos (pulável) → link e QR code. Criação automática do registro em `profissionais` vinculado ao proprietário (decisão 4). Sugestão de `janela_agendamento_dias` por segmento (6.6).
+**As duas metades de como um tenant nasce.**
+
+**Provisionar.** Comando de linha, rodando como dono do banco: cria `estabelecimentos`, a linha 1:1 de `configuracoes` com os padrões de 8.2, o vínculo `PROPRIETARIO` como `CONVIDADO`, o registro em `profissionais` ligado a ele (decisão 4) e o convite. Devolve o link. Não é rota HTTP e não passa pela API — por isso `estabelecimentos` segue sem política de RLS de inserção, que teria de ser aberta para funcionar.
+
+Fica fora da aplicação de propósito: interface de super admin é superfície de ataque que só a plataforma usa, e a v1 não a tem (2.1). Suspender um tenant continua sendo `UPDATE` manual, como 8.2 diz.
+
+**Onboarding.** O wizard de cinco passos de 4.1, que abre depois que o proprietário aceita o convite: dados do negócio → horário de trabalho → primeiro serviço → bloqueios já conhecidos (pulável) → link e QR code. O estabelecimento já existe; o wizard completa o que o provisionamento não tem como saber. Sugestão de `janela_agendamento_dias` por segmento (6.6).
 
 **Lote puxado:** `Progresso`, `Passos`.
 
-**Pronto quando:** uma conta nova sai do wizard com um link público funcional. Esse é o critério literal do funcional, e ele não pode ser cumprido pela metade — o link tem que abrir e mostrar o catálogo, o que amarra esta etapa à 11.
+**Pronto quando:** um tenant provisionado pelo comando recebe o convite, o proprietário define a senha, atravessa o wizard e sai com um link público funcional. Esse é o critério literal do funcional, e ele não pode ser cumprido pela metade — o link tem que abrir e mostrar o catálogo, o que amarra esta etapa à 11.
 
 **Por que aqui, e não depois do público.** O onboarding é o consumidor mais exigente da etapa 7: passa por configuração, horário e serviço em cinco telas seguidas. Se alguma dessas telas ficou difícil de compor, o wizard revela imediatamente.
 
@@ -312,9 +320,9 @@ Esta tabela é o mecanismo que mantém o inventário honesto (D11). A etapa 4 en
 | Etapa | Componentes que ela puxa |
 |---|---|
 | 4 | `Botao`, `BotaoIcone`, `Campo`, `Entrada`, `AreaTexto`, `Selecao`, `Alternancia`, `Caixa`, `Selo`, `Cartao`, `Aviso`, `Dialogo`, `Esqueleto`, `Separador`, `Avatar`, `CabecalhoTela`, `ListaVazia`, `BarraDeAcoes`, `derivarPaleta`, `ProvedorMarca`, `SeletorCorMarca` |
-| 7 | `EntradaMascarada`, `EntradaMoeda`, `EntradaHora`, `Passo`, `SeletorCor`, `Abas`, `Acordeao`, `MenuSuspenso`, `Tabela`, `Paginacao`, `Confirmacao`, `ResumoDeValor` |
+| 7 | `EntradaMascarada`, `EntradaMoeda`, `EntradaHora`, `Passo`, `SeletorCor`, `Abas`, `Acordeao`, `MenuSuspenso`, `Tabela`, `Paginacao`, `Confirmacao`, `ResumoDeValor`, `FolhaInferior`, `ListaOuTabela` |
 | 8 | `Progresso`, `Passos` |
-| 9 | `Combo`, `SeletorData`, `FolhaInferior`, `Popover`, `PainelLateral`, `Dica`, `GradeDeHorarios`, `CalendarioDeDisponibilidade` |
+| 9 | `Combo`, `SeletorData`, `Popover`, `PainelLateral`, `Dica`, `GradeDeHorarios`, `CalendarioDeDisponibilidade` |
 | 11 | `Radio`, `Etiqueta` |
 
 **A regra de entrada é a mesma em toda etapa:** o componente nasce em `packages/ui`, aparece no playground com os sete estados nas duas densidades, e só então é usado na tela. Nascer na tela e "subir depois" é como a API acaba moldada pelo primeiro caso de uso.

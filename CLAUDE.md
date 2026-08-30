@@ -5,7 +5,8 @@ SaaS multi-tenant de agendamento de consultas e atendimentos, para nichos variad
 e pt-BR fixos. O sistema **não processa pagamento** — registra valores para controle
 gerencial.
 
-**Estado: etapas 0 a 7 concluídas. A etapa 8 (onboarding) é o próximo passo.**
+**Estado: etapas 0 a 7 concluídas. A etapa 8 (provisionamento e onboarding) é o
+próximo passo — o provisionamento já está de pé; falta o wizard.**
 O detalhe está em "Onde a implementação está", no fim deste arquivo.
 
 ---
@@ -127,9 +128,10 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | 2 — Domínio | `main` | As sete pastas de 5.1, puras; os cinco casos de 10.2 cobertos |
 | 3 — API | `main` | `contratos` com `ROTAS` e cliente próprio, Fastify com os quatro plugins, `unidadeDeTrabalho`, as cinco portas locais, e quatro rotas reais |
 | 4 — Design | `main` | Tokens em três camadas, `derivarPaleta` em OKLCH, os 18 componentes do lote de fundação, e o playground com `/tokens`, `/primitivos` e `/marca` |
-| 5 — Autenticação | `main` | argon2id, sessão opaca de 30 dias, os três transacionais em React Email, cadastro, convite de equipe e recuperação de senha |
+| 5 — Autenticação | `main` | argon2id, sessão opaca de 30 dias, os transacionais em React Email, convite de equipe e recuperação de senha |
 | 6 — Painel | `main` | Vite + TanStack Router/Query, guarda de rota, layout nas duas larguras, seletor de estabelecimento, `ControlePermissao` e estado de tabela na URL |
 | 7 — Configuração | `etapa-7-configuracao` | O lote de doze componentes, as doze chaves de 8.2, catálogo, equipe nas três combinações de 2.4, grade versionada por vigência e exceções |
+| 8 — Provisionamento | `etapa-7-configuracao` | `provisionarTenant` e a linha de comando; cadastro aberto removido; `/convite`, `/recuperacao` e `/nova-senha` no painel. **Falta o wizard de onboarding.** |
 
 Levantar o ambiente do zero:
 
@@ -151,7 +153,22 @@ ALTER ROLE agendamento_publico WITH PASSWORD 'agendamento';
 e aponte `BANCO_URL` e `BANCO_URL_PUBLICO` para esses papéis — não para o dono do
 banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/servidor.ts`.
 
-`DIRETO_BANCO_URL` precisa estar no ambiente ou em `.env` — ver `.env.exemplo`.
+`DIRETO_BANCO_URL` precisa estar no ambiente ou em `.env`, e aponta para o **dono
+do banco**, não para um dos papéis — ver `.env.exemplo`. Migração, semente e
+provisionamento escrevem em `estabelecimentos`, que não tem política de inserção.
+
+**Não existe cadastro aberto de gestor** (2.2). Um tenant nasce assim:
+
+```
+pnpm --filter @agendamento/api provisionar -- \
+  --nome "Barbearia Corte Fino" --slug corte-fino \
+  --email dono@exemplo.com --responsavel "Rui Barbosa"
+```
+
+O comando cria o estabelecimento, as configurações padrão, o vínculo de
+proprietário como `CONVIDADO` e o registro em `profissionais`, e envia o convite.
+O link também é impresso, para o caso de o SMTP falhar. Quem define a senha é o
+proprietário, pelo `/convite` do painel.
 
 **Decidido durante a implementação, fora dos seis documentos:**
 
@@ -287,6 +304,22 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
   servidor: o formulário aponta a linha errada antes de enviar. Duas faixas
   sobrepostas fariam o motor somar o intervalo comum duas vezes, e o mesmo
   horário apareceria repetido para o cliente.
+- **Não existe cadastro aberto de gestor** (2.2, decidido durante a etapa 7). O
+  sistema é alugado: a plataforma provisiona o tenant e convida o proprietário,
+  que a partir daí convida a própria equipe. As rotas `/auth/cadastro`,
+  `/auth/verificar-email` e `/auth/reenviar-verificacao` foram removidas, e o
+  template de verificação junto — o aceite do convite já verifica o e-mail.
+- Provisionar é **linha de comando**, não rota: `estabelecimentos` fica sem
+  política de inserção, que teria de ser aberta para funcionar, e a conexão é a
+  do dono do banco. Interface de super admin é superfície que só a plataforma
+  usaria, e a v1 não a tem.
+- O enum `finalidade_verificacao` do banco guarda `VERIFICACAO_EMAIL`, que nada
+  emite hoje. Fica para o cadastro **opcional do cliente**, na etapa 11 — tirá-lo
+  exigiria migração de tipo para devolvê-lo depois. A união em TypeScript não o
+  traz, então nada o escreve por engano.
+- O painel ganhou `/convite`, `/recuperacao` e `/nova-senha`. Sem elas os links
+  dos e-mails caíam em rota inexistente — e, sem cadastro aberto, `/convite` é a
+  **única** porta de entrada do sistema.
 
 ## Decisões ainda abertas
 
@@ -298,7 +331,6 @@ banco, que ignora RLS. Depois, `node --env-file-if-exists=.env apps/api/src/serv
 | Rate limit de `slots` e `dias_com_vaga` — provisório em 60/min e 30/min | Etapa 11 |
 | `token_gestao_expira_em` definido como "alguns dias" — não implementável | Etapa 11 |
 | Como testar `{slug}.dominio.com` localmente (hosts do Windows não aceita curinga) | Etapa 11 |
-| Criar estabelecimento antes de existir contexto de tenant — a RLS de `estabelecimentos` cobre leitura e alteração, não criação | Etapa 8 |
 | "Existência de ocupação" é mais estrito do que GRANT de coluna expressa; pede view com `security_invoker`, que é o que fixa o piso do Postgres em 15 | Etapa 11 |
 | Expurgo da auditoria atravessa tenants, e a RLS o zera — decidir entre papel dono e laço por tenant | Etapa 12 |
 | Hospedagem — recomendação em `docs/operacao.md` §2, decisão em aberto por §2.5 | Etapa 14 |

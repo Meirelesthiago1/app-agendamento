@@ -1,12 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import {
-  emailDeConvite,
-  emailDeRecuperacao,
-  emailDeVerificacao,
-  exigirAssuntoCurto,
-} from '../src/emails/index.ts';
+import { emailDeConvite, emailDeRecuperacao, exigirAssuntoCurto } from '../src/emails/index.ts';
 
-const LINK = 'https://app.agendamento.local/verificar?token=abc123';
+const LINK = 'https://app.agendamento.local/convite?token=abc123';
 
 const CONVITE = {
   convidadoPor: 'Rui Barbosa',
@@ -21,7 +16,6 @@ const CONVITE = {
 describe('regras de todos os templates', () => {
   test('o assunto cabe em 60 caracteres', async () => {
     const mensagens = [
-      await emailDeVerificacao('alguem@teste.local', { nome: 'Rui', link: LINK }),
       await emailDeConvite('alguem@teste.local', CONVITE),
       await emailDeRecuperacao('alguem@teste.local', { link: LINK }),
     ];
@@ -43,13 +37,13 @@ describe('regras de todos os templates', () => {
   });
 
   test('o preheader é preenchido: vazio, o cliente exibe o começo do HTML', async () => {
-    const mensagem = await emailDeVerificacao('alguem@teste.local', { nome: 'Rui', link: LINK });
+    const mensagem = await emailDeRecuperacao('alguem@teste.local', { link: LINK });
 
-    expect(mensagem.html).toContain('Confirme seu e-mail para ativar sua conta.');
+    expect(mensagem.html).toContain('Link para redefinir sua senha.');
   });
 
   test('a alternativa em texto puro traz a URL, não o rótulo', async () => {
-    const mensagem = await emailDeVerificacao('alguem@teste.local', { nome: 'Rui', link: LINK });
+    const mensagem = await emailDeConvite('alguem@teste.local', CONVITE);
 
     expect(mensagem.texto).toContain(LINK);
     expect(mensagem.texto).not.toContain('<a ');
@@ -57,7 +51,6 @@ describe('regras de todos os templates', () => {
 
   test('um CTA por e-mail: dois botões competem e nenhum é clicado', async () => {
     for (const mensagem of [
-      await emailDeVerificacao('a@teste.local', { nome: 'Rui', link: LINK }),
       await emailDeConvite('a@teste.local', CONVITE),
       await emailDeRecuperacao('a@teste.local', { link: LINK }),
     ]) {
@@ -70,13 +63,6 @@ describe('regras de todos os templates', () => {
 });
 
 describe('conteúdo de cada transacional', () => {
-  test('verificação: sem conteúdo além do link, e diz o prazo', async () => {
-    const mensagem = await emailDeVerificacao('rui@teste.local', { nome: 'Rui', link: LINK });
-
-    expect(mensagem.assunto).toBe('Confirme seu e-mail');
-    expect(mensagem.texto).toContain('24 horas');
-  });
-
   test('convite: diz o papel, porque quem recebe precisa saber o que aceita', async () => {
     const mensagem = await emailDeConvite('novo@teste.local', CONVITE);
 
@@ -105,17 +91,13 @@ describe('conteúdo de cada transacional', () => {
 /** 1.1: nenhuma superfície revela se a conta existe. */
 describe('o que o texto nunca revela', () => {
   test('nenhum transacional diz se a conta existe ou não', async () => {
-    for (const mensagem of [
-      await emailDeVerificacao('a@teste.local', { nome: 'Rui', link: LINK }),
-      await emailDeRecuperacao('a@teste.local', { link: LINK }),
-    ]) {
+    for (const mensagem of [await emailDeRecuperacao('a@teste.local', { link: LINK })]) {
       expect(mensagem.texto).not.toMatch(/conta (não )?existe|cadastrad[oa]|encontrada/i);
     }
   });
 
   test('sem exclamação: a voz é direta, sem interjeição', async () => {
     for (const mensagem of [
-      await emailDeVerificacao('a@teste.local', { nome: 'Rui', link: LINK }),
       await emailDeConvite('a@teste.local', CONVITE),
       await emailDeRecuperacao('a@teste.local', { link: LINK }),
     ]) {

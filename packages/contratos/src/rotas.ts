@@ -74,6 +74,8 @@ export const usuarioDaSessao = z.object({
   estabelecimentos: z.array(
     z.object({
       id: uuid,
+      /** Quem tem mais de um vínculo escolhe entre eles pelo nome, não pelo id. */
+      nome: z.string(),
       papel: z.enum(['PROPRIETARIO', 'ADMIN', 'FUNCIONARIO']),
     }),
   ),
@@ -313,35 +315,6 @@ export const ROTAS = {
       ok: z.boolean(),
       banco: z.boolean(),
     }),
-  },
-
-  cadastrar: {
-    metodo: 'POST',
-    caminho: '/auth/cadastro',
-    publica: false,
-    corpo: z.object({
-      nome: z.string().min(2).max(120),
-      email: z.email(),
-      senha,
-    }),
-    // A mesma resposta exista a conta ou não (1.1 do conteúdo)
-    resposta: feito,
-  },
-
-  verificarEmail: {
-    metodo: 'POST',
-    caminho: '/auth/verificar-email',
-    publica: false,
-    corpo: z.object({ token: z.string().min(20) }),
-    resposta: feito,
-  },
-
-  reenviarVerificacao: {
-    metodo: 'POST',
-    caminho: '/auth/reenviar-verificacao',
-    publica: false,
-    corpo: z.object({ email: z.email() }),
-    resposta: feito,
   },
 
   entrar: {

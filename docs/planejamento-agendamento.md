@@ -55,7 +55,7 @@ Esse princípio resolve a maior parte dos casos de borda: mudança de horário d
 
 | Ator | Escopo | Descrição |
 |---|---|---|
-| Super admin | Plataforma | Provisiona tenants, gerencia planos e suporte. Fora do escopo do MVP. |
+| Super admin | Plataforma | Provisiona tenants e convida o proprietário. Sem interface na v1: é operação de linha de comando com acesso ao banco. |
 | Proprietário | Tenant | Dono da conta. Acesso total, inclusive plano e exclusão do tenant. |
 | Admin | Tenant | Gestão operacional completa, exceto plano e transferência de propriedade. |
 | Funcionário | Tenant | Acesso à própria agenda, próprios lançamentos e próprios relatórios. |
@@ -65,6 +65,10 @@ Esse princípio resolve a maior parte dos casos de borda: mudança de horário d
 ### 2.2 Hierarquia
 
 Superconjunto estrito: **Proprietário ⊇ Admin ⊇ Funcionário**. Tudo que um funcionário pode fazer, o admin também pode; tudo que o admin pode fazer, o proprietário também pode.
+
+**Ninguém entra por conta própria.** Não existe cadastro aberto de gestor: o sistema é alugado, e o tenant nasce provisionado pela plataforma. O proprietário chega por convite, e a partir dele convida a própria equipe. A única identidade que se cadastra sozinha é a do cliente que agenda — e mesmo essa é opcional (9.5).
+
+A consequência prática é que **criar estabelecimento nunca acontece dentro de uma requisição autenticada**: acontece antes de existir tenant, por um caminho que não passa pela API. É o que dispensa uma política de RLS de inserção em `estabelecimentos`, que teria de ser aberta para funcionar.
 
 ### 2.3 Matriz de permissões
 
@@ -184,7 +188,7 @@ O MVP depende de um worker, não apenas do servidor web:
 
 ### 4.1 App do gestor
 
-**Onboarding** — wizard de cinco passos no primeiro acesso: dados do negócio → horário de trabalho → primeiro serviço → datas em que já sabe que não vai atender (opcional, pulável) → link e QR code prontos para compartilhar. O gestor precisa sair do wizard com um link funcional.
+**Onboarding** — wizard de cinco passos no primeiro acesso, depois que o proprietário aceita o convite: dados do negócio → horário de trabalho → primeiro serviço → datas em que já sabe que não vai atender (opcional, pulável) → link e QR code prontos para compartilhar. O estabelecimento já existe quando o wizard abre — a plataforma o provisionou com nome, slug e fuso (2.1); o wizard completa o resto. O gestor precisa sair dele com um link funcional.
 
 O quarto passo custa uma tela e previne o problema mais comum do primeiro mês: viagem, casamento ou feriado prolongado já marcados há meses, que ninguém pensa em registrar até o cliente agendar em cima deles. A janela de agendamento reduz a exposição a imprevistos desconhecidos; o evento já conhecido só o bloqueio preventivo resolve.
 
@@ -689,7 +693,7 @@ estabelecimentos
   excluido_em        timestamptz
 ```
 
-`plano` e `status` existem como registro, sem cobrança nem bloqueio automático na v1 — o super admin está fora do escopo do MVP. Suspender um tenant é operação manual no banco.
+`plano` e `status` existem como registro, sem cobrança nem bloqueio automático na v1. Provisionar e suspender um tenant são operações de linha de comando, com acesso ao banco — a interface de super admin fica para depois do MVP.
 
 ```
 configuracoes                              -- 1:1 com estabelecimentos
@@ -1314,9 +1318,11 @@ O link circula por WhatsApp e é encaminhável. Portanto:
 ### 10.8 Fluxos
 
 ```
-GESTOR — cadastro
-  e-mail + senha  ou  Google
-    → verifica e-mail  → cria estabelecimento  → wizard de onboarding
+GESTOR — entrada de um tenant novo
+  plataforma provisiona: estabelecimento + configuração padrão
+    + vinculos (PROPRIETARIO, CONVIDADO) + profissionais do proprietário
+    → e-mail com token de convite
+    → proprietário define senha  → vinculos (ATIVO)  → wizard de onboarding
 
 GESTOR — convite de equipe
   admin informa e-mail e papel
@@ -1347,7 +1353,7 @@ CLIENTE — retorna
 
 | Fase | Escopo |
 |---|---|
-| **MVP** | Estabelecimento e configurações, serviços, profissionais (com ou sem login), horários e exceções, **bloqueio de agenda com resolução em lote**, motor de disponibilidade, **agendamento com múltiplos serviços (1 a 5 itens)**, agendamento público com e sem cadastro, agenda do gestor com sinalização de atraso, cinco estados e nove transições, expiração automática de solicitações pendentes, **livro-caixa append-only** com lançamento manual, e-mail de confirmação e lembrete, worker de segundo plano, ambos os PWAs instaláveis. **Autenticação:** e-mail e senha com Google como alternativa, para gestor e cliente; convite de equipe por token; link de gestão por agendamento; lógica de OTP implementada sem provedor real |
+| **MVP** | Estabelecimento e configurações, serviços, profissionais (com ou sem login), horários e exceções, **bloqueio de agenda com resolução em lote**, motor de disponibilidade, **agendamento com múltiplos serviços (1 a 5 itens)**, agendamento público com e sem cadastro, agenda do gestor com sinalização de atraso, cinco estados e nove transições, expiração automática de solicitações pendentes, **livro-caixa append-only** com lançamento manual, e-mail de confirmação e lembrete, worker de segundo plano, ambos os PWAs instaláveis. **Autenticação:** tenant provisionado pela plataforma, sem cadastro aberto de gestor; e-mail e senha com Google como alternativa, para gestor e cliente; convite por token, que é como o proprietário e a equipe entram; link de gestão por agendamento; lógica de OTP implementada sem provedor real |
 | **Fase 2** | Verificação de telefone por OTP com provedor real, vinculação de histórico de convidado, WhatsApp, remarcação self-service pelo cliente (com `prazo_remarcacao_min`), pacotes promocionais (combinação de itens com preço próprio), janela de agendamento por serviço, transferência em lote de agendamentos entre profissionais, papel de recepção, fila de espera, e os relatórios adiados em 9.8 (ocupação, horários de pico, clientes novos vs. recorrentes, ranking de serviços, duração real vs. configurada, gráficos) |
 | **Fase 3** | Recorrência, integração com Google Calendar, atendimento em grupo, API pública, agendamento por janela de chegada |
 

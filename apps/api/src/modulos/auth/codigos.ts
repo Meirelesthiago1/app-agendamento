@@ -3,16 +3,17 @@ import { and, eq, gt, isNull } from 'drizzle-orm';
 import type { Transacao } from '../../infra/db/pools.ts';
 import { gerarToken, hashDeToken } from './token.ts';
 
-export type Finalidade =
-  | 'OTP_TELEFONE'
-  | 'VERIFICACAO_EMAIL'
-  | 'RECUPERACAO_SENHA'
-  | 'CONVITE_EQUIPE';
+/**
+ * O enum do banco tem também `VERIFICACAO_EMAIL`, que nada emite hoje: gestor
+ * entra por convite (2.2), e o aceite já verifica o e-mail. O valor fica na
+ * coluna para o cadastro opcional do cliente, na etapa 11 — tirá-lo custaria
+ * uma migração de tipo para devolvê-lo depois.
+ */
+export type Finalidade = 'OTP_TELEFONE' | 'RECUPERACAO_SENHA' | 'CONVITE_EQUIPE';
 
 /** Os prazos da seção 4 do conteúdo. */
 export const VALIDADE_EM_HORAS: Record<Finalidade, number> = {
   OTP_TELEFONE: 5 / 60,
-  VERIFICACAO_EMAIL: 24,
   RECUPERACAO_SENHA: 1,
   CONVITE_EQUIPE: 7 * 24,
 };

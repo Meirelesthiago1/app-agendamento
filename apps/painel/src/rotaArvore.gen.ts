@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './rotas/__root'
 import { Route as IndexRouteImport } from './rotas/index'
 import { Route as ProtegidoRouteImport } from './rotas/_protegido'
-import { Route as CadastroRouteImport } from './rotas/cadastro'
+import { Route as ConviteRouteImport } from './rotas/convite'
 import { Route as EntradaRouteImport } from './rotas/entrada'
+import { Route as NovaSenhaRouteImport } from './rotas/nova-senha'
+import { Route as RecuperacaoRouteImport } from './rotas/recuperacao'
 import { Route as ProtegidoAgendaRouteImport } from './rotas/_protegido/agenda'
 import { Route as ProtegidoCatalogoRouteImport } from './rotas/_protegido/catalogo'
 import { Route as ProtegidoConfiguracoesRouteImport } from './rotas/_protegido/configuracoes'
@@ -28,14 +30,24 @@ const ProtegidoRoute = ProtegidoRouteImport.update({
   id: '/_protegido',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CadastroRoute = CadastroRouteImport.update({
-  id: '/cadastro',
-  path: '/cadastro',
+const ConviteRoute = ConviteRouteImport.update({
+  id: '/convite',
+  path: '/convite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntradaRoute = EntradaRouteImport.update({
   id: '/entrada',
   path: '/entrada',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperacaoRoute = RecuperacaoRouteImport.update({
+  id: '/recuperacao',
+  path: '/recuperacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProtegidoAgendaRoute = ProtegidoAgendaRouteImport.update({
@@ -66,8 +78,10 @@ const ProtegidoHorariosRoute = ProtegidoHorariosRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/cadastro': typeof CadastroRoute
+  '/convite': typeof ConviteRoute
   '/entrada': typeof EntradaRoute
+  '/nova-senha': typeof NovaSenhaRoute
+  '/recuperacao': typeof RecuperacaoRoute
   '/agenda': typeof ProtegidoAgendaRoute
   '/catalogo': typeof ProtegidoCatalogoRoute
   '/configuracoes': typeof ProtegidoConfiguracoesRoute
@@ -76,8 +90,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/cadastro': typeof CadastroRoute
+  '/convite': typeof ConviteRoute
   '/entrada': typeof EntradaRoute
+  '/nova-senha': typeof NovaSenhaRoute
+  '/recuperacao': typeof RecuperacaoRoute
   '/agenda': typeof ProtegidoAgendaRoute
   '/catalogo': typeof ProtegidoCatalogoRoute
   '/configuracoes': typeof ProtegidoConfiguracoesRoute
@@ -88,8 +104,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_protegido': typeof ProtegidoRouteWithChildren
-  '/cadastro': typeof CadastroRoute
+  '/convite': typeof ConviteRoute
   '/entrada': typeof EntradaRoute
+  '/nova-senha': typeof NovaSenhaRoute
+  '/recuperacao': typeof RecuperacaoRoute
   '/_protegido/agenda': typeof ProtegidoAgendaRoute
   '/_protegido/catalogo': typeof ProtegidoCatalogoRoute
   '/_protegido/configuracoes': typeof ProtegidoConfiguracoesRoute
@@ -100,8 +118,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/cadastro'
+    | '/convite'
     | '/entrada'
+    | '/nova-senha'
+    | '/recuperacao'
     | '/agenda'
     | '/catalogo'
     | '/configuracoes'
@@ -110,8 +130,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/cadastro'
+    | '/convite'
     | '/entrada'
+    | '/nova-senha'
+    | '/recuperacao'
     | '/agenda'
     | '/catalogo'
     | '/configuracoes'
@@ -121,8 +143,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_protegido'
-    | '/cadastro'
+    | '/convite'
     | '/entrada'
+    | '/nova-senha'
+    | '/recuperacao'
     | '/_protegido/agenda'
     | '/_protegido/catalogo'
     | '/_protegido/configuracoes'
@@ -133,8 +157,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProtegidoRoute: typeof ProtegidoRouteWithChildren
-  CadastroRoute: typeof CadastroRoute
+  ConviteRoute: typeof ConviteRoute
   EntradaRoute: typeof EntradaRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
+  RecuperacaoRoute: typeof RecuperacaoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -153,11 +179,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtegidoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cadastro': {
-      id: '/cadastro'
-      path: '/cadastro'
-      fullPath: '/cadastro'
-      preLoaderRoute: typeof CadastroRouteImport
+    '/convite': {
+      id: '/convite'
+      path: '/convite'
+      fullPath: '/convite'
+      preLoaderRoute: typeof ConviteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/entrada': {
@@ -165,6 +191,20 @@ declare module '@tanstack/react-router' {
       path: '/entrada'
       fullPath: '/entrada'
       preLoaderRoute: typeof EntradaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperacao': {
+      id: '/recuperacao'
+      path: '/recuperacao'
+      fullPath: '/recuperacao'
+      preLoaderRoute: typeof RecuperacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_protegido/agenda': {
@@ -228,8 +268,10 @@ const ProtegidoRouteWithChildren = ProtegidoRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtegidoRoute: ProtegidoRouteWithChildren,
-  CadastroRoute: CadastroRoute,
+  ConviteRoute: ConviteRoute,
   EntradaRoute: EntradaRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
+  RecuperacaoRoute: RecuperacaoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

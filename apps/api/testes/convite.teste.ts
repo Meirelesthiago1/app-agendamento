@@ -172,7 +172,10 @@ describe('convite de equipe', () => {
     const eu = await app.inject({ method: 'GET', url: '/auth/eu', headers: { cookie } });
 
     expect(eu.statusCode).toBe(200);
-    expect(eu.json().estabelecimentos).toEqual([{ id: TENANT_BARBEARIA, papel: 'FUNCIONARIO' }]);
+    expect(eu.json().estabelecimentos).toEqual([
+      // O nome vem junto: quem tem mais de um vínculo escolhe por ele, não pelo id
+      { id: TENANT_BARBEARIA, nome: 'Barbearia Corte Fino', papel: 'FUNCIONARIO' },
+    ]);
     expect(eu.json().estabelecimentoAtual).toBe(TENANT_BARBEARIA);
   });
 
@@ -310,23 +313,5 @@ describe('recuperação de senha', () => {
         })
       ).statusCode,
     ).toBe(404);
-  });
-
-  test('token de verificação não serve como redefinição de senha', async () => {
-    await app.inject({
-      method: 'POST',
-      url: '/auth/cadastro',
-      payload: { nome: 'Dora', email: 'dora@teste.local', senha: SENHA },
-    });
-
-    const deVerificacao = tokenDoUltimoEmail();
-
-    const tentativa = await app.inject({
-      method: 'POST',
-      url: '/auth/nova-senha',
-      payload: { token: deVerificacao, senha: 'outra-senha-longa' },
-    });
-
-    expect(tentativa.statusCode).toBe(404);
   });
 });

@@ -43,8 +43,6 @@ const LIMITES = {
   // Tentativa de senha é o alvo óbvio de força bruta, e o limite por IP é a
   // primeira barreira
   '/auth/entrada': { requisicoes: 10, janelaSegundos: 60 },
-  '/auth/cadastro': { requisicoes: 5, janelaSegundos: 60 },
-  '/auth/reenviar-verificacao': { requisicoes: 3, janelaSegundos: 60 },
   '/auth/recuperacao': { requisicoes: 3, janelaSegundos: 60 },
   '/auth/nova-senha': { requisicoes: 10, janelaSegundos: 60 },
   '/auth/convite': { requisicoes: 10, janelaSegundos: 60 },
@@ -128,29 +126,12 @@ export async function criarAplicacao(deps: Dependencias): Promise<Aplicacao> {
       email: identidade.email,
       estabelecimentos: identidade.vinculos.map((v) => ({
         id: v.estabelecimentoId,
+        nome: v.nome,
         papel: v.papel,
       })),
       estabelecimentoAtual: identidade.escolhido?.estabelecimentoId ?? null,
     };
   }
-
-  registrarRota(app, 'cadastrar', async ({ corpo, requisicao }) => {
-    await auth.cadastrar(dependenciasDeAuth(), { ...corpo, ip: requisicao.ip });
-
-    return { ok: true };
-  });
-
-  registrarRota(app, 'verificarEmail', async ({ corpo }) => {
-    await auth.verificarEmail(dependenciasDeAuth(), corpo.token);
-
-    return { ok: true };
-  });
-
-  registrarRota(app, 'reenviarVerificacao', async ({ corpo, requisicao }) => {
-    await auth.reenviarVerificacao(dependenciasDeAuth(), corpo.email, requisicao.ip);
-
-    return { ok: true };
-  });
 
   registrarRota(app, 'entrar', async ({ corpo, requisicao, reply }) => {
     const sessao = await auth.entrar(dependenciasDeAuth(), {
