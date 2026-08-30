@@ -133,6 +133,12 @@ e qualquer coisa que altere histórico. Oferecer, no máximo; nunca executar.
 | 7 — Configuração | `etapa-7-configuracao` | O lote de doze componentes, as doze chaves de 8.2, catálogo, equipe nas três combinações de 2.4, grade versionada por vigência e exceções |
 | 8 — Provisionamento | `etapa-7-configuracao` | `provisionarTenant` e a linha de comando; cadastro aberto removido; `/convite`, `/recuperacao` e `/nova-senha` no painel. **Falta o wizard de onboarding.** |
 
+**Fora da numeração das etapas, na mesma branch:** o painel virou mobile-first
+(D27), o que reescreveu o §1.1 do design para a **v1.2** e trouxe `FolhaInferior`
+e `ListaOuTabela` da etapa 9 para a 7. Veio de o usuário testar a etapa 7 no
+celular e apontar três coisas — barra com sete itens, tabela rolando para o lado,
+e a grade de horários ilegível.
+
 Levantar o ambiente do zero:
 
 ```
@@ -169,6 +175,11 @@ O comando cria o estabelecimento, as configurações padrão, o vínculo de
 proprietário como `CONVIDADO` e o registro em `profissionais`, e envia o convite.
 O link também é impresso, para o caso de o SMTP falhar. Quem define a senha é o
 proprietário, pelo `/convite` do painel.
+
+**A semente não define senha.** Ela cria os dois estabelecimentos com o e-mail já
+verificado e `senha_hash` nulo, então não dá para entrar neles direto. Para
+destravar, use a recuperação de senha e pegue o link no Mailpit (`localhost:8025`)
+— é o mesmo caminho de quem esqueceu a senha, e exercita o fluxo de verdade.
 
 **Decidido durante a implementação, fora dos seis documentos:**
 
@@ -320,6 +331,33 @@ proprietário, pelo `/convite` do painel.
 - O painel ganhou `/convite`, `/recuperacao` e `/nova-senha`. Sem elas os links
   dos e-mails caíam em rota inexistente — e, sem cadastro aberto, `/convite` é a
   **única** porta de entrada do sistema.
+- **O painel é mobile-first** (D27, design v1.2). Toda tela nasce em ~390px e
+  cresce; o desktop ganha largura, não uma segunda interface. Um único ponto de
+  virada, `md` (768px), e ele **não** vira token — é o padrão do Tailwind (D30).
+- Densidade e largura são eixos diferentes: `data-densidade` continua sendo
+  atributo de raiz, com **duas** densidades, e a variação por aparelho é resolvida
+  por `@media` dentro de `densidade.css` e `tailwind.css`. Trocar o atributo em
+  tempo de execução tornaria densidade um estado, e traria `--largura-conteudo:
+  480px` junto, que é errado numa listagem de painel.
+- O piso de 16px em campo (D16) é escopado por **ponteiro grosseiro**, não por
+  aplicação nem largura. Escopado ao público, deixou todo campo do painel dando
+  zoom no iPhone por três etapas — e nenhum lint, tipo ou revisão pegou, porque
+  só aparece em dispositivo. Há teste de string em `tokens.teste.ts` guardando.
+- A navegação do celular tem três destinos e um "Menu" em `FolhaInferior` (D28).
+  Barra e folha derivam da **mesma** lista em `componentes/navegacao/itens.ts`, e
+  há teste provando que nenhuma tela fica fora das duas: no desktop a lateral
+  continua mostrando tudo, então o buraco não apareceria sozinho.
+- `ListaOuTabela` é a **única** forma de listagem do painel (D29): as colunas são
+  dado, e tabela ou cartão é escolha de CSS dentro do componente. `conteudo(item)`
+  é chamada duas vezes por item e precisa ser pura. Dois blocos irmãos no chamador
+  fariam a formatação de cada célula existir duas vezes, e a segunda nunca é vista.
+- A grade de horários é agrupada por dia, não por faixa, mas o `useFieldArray`
+  continua sobre a lista plana — o agrupamento é só de renderização, e os caminhos
+  de erro seguem o índice global. `fields[i].diaSemana` é instantâneo do valor
+  padrão, o que normalmente é armadilha do react-hook-form; aqui é seguro porque o
+  dia deixou de ser editável e só muda em `append` ou `remove`.
+- `/clientes` e `/caixa` estão na barra inferior e **respondem 404** até as etapas
+  10 e 13. Decisão consciente: a barra nasce na forma final para não trocar depois.
 
 ## Decisões ainda abertas
 
